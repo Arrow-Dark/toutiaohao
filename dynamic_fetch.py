@@ -18,6 +18,9 @@ def check_type(item_id):
     try:
         url='https://www.toutiao.com/item/'+str(item_id)+'/'
         res = requests.get(url,timeout=30)
+        if res.status_code==403:
+            print('please test the Ip is blocked!')
+            #return -9
         if re.match(r'^http://www.toutiao.com/i.*$', res.url):
             bs = BeautifulSoup(res.content.decode('utf-8'), 'xml')
             scripts = bs.select('body script')
@@ -41,6 +44,7 @@ def check_type(item_id):
             return 0
         if re.match(r'^https://temai.snssdk.com/.*$', res.url):
             return 3
+        time.sleep(2)
     except requests.exceptions.ConnectionError:
         print('url=https://www.toutiao.com/item/'+str(item_id)+'/')
         traceback.print_exc()
