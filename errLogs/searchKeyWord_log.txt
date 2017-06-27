@@ -1,0 +1,65 @@
+2017-05-13 21:14:45_word=旙:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/searchKeyWord.py", line 68, in cur_tab4_url_open
+    json_dict=json.loads(res.text)
+  File "/usr/lib/python3.5/json/__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.5/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.5/json/decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-05-16 11:45:17_word=格子:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/searchKeyWord.py", line 68, in cur_tab4_url_open
+    json_dict=json.loads(res.text)
+  File "/usr/lib/python3.5/json/__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.5/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.5/json/decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-05-16 14:33:39_word=爱玩:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/searchKeyWord.py", line 68, in cur_tab4_url_open
+    json_dict=json.loads(res.text)
+  File "/usr/lib/python3.5/json/__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.5/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.5/json/decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-05-18 15:43:58_word=日记:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/searchKeyWord.py", line 68, in cur_tab4_url_open
+    json_dict=json.loads(res.text)
+  File "/usr/lib/python3.5/json/__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.5/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.5/json/decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-05-18 15:44:28_word=传播:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/searchKeyWord.py", line 68, in cur_tab4_url_open
+    json_dict=json.loads(res.text)
+  File "/usr/lib/python3.5/json/__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.5/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.5/json/decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+

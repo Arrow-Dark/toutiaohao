@@ -1,0 +1,119 @@
+2017-05-12 18:00:50:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-12 18:28:35:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-12 18:31:07:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-12 19:36:44:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-13 04:09:52:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-13 05:02:10:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-15 10:39:35:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-15 14:52:38:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-15 14:57:40:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-15 14:58:00:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-15 15:03:15:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-15 15:24:53:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 41, in fetchWriterTitle
+    script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+AttributeError: 'NoneType' object has no attribute 'text'
+------------------------------------------
+
+2017-05-15 16:05:15:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-16 14:53:09:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-16 15:11:47:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-16 17:29:44:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
+2017-05-18 14:44:39:
+Traceback (most recent call last):
+  File "/home/oliver/toutiao_workspace/toutiaohaoWorking/writer_fetch.py", line 50, in fetchWriterTitle
+    avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+IndexError: list index out of range
+------------------------------------------
+
