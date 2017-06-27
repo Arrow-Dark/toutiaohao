@@ -411,6 +411,6 @@ def headlineIds(pool,db1,db2,userAgents):
                     perk_item_thread.start()
                     dy_list_thread.join()
                     perk_item_thread.join()
-                time.sleep(6)
+                #time.sleep(6)
         except:
             traceback.print_exc()
