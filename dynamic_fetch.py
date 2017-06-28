@@ -130,7 +130,8 @@ def fetch_dy_list(uid,pool,user_agent):
                     behot_time=x['create_time']
                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                     if is_again_working:
-                        rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                        #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                        rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                     else:
                         print(uid + '_Dynamic overtime has stopped fetching')
                         return
@@ -174,7 +175,8 @@ def fetch_dy_list(uid,pool,user_agent):
                                 behot_time=x['create_time']
                                 is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                                 if is_again_working:
-                                    rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                    #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                    rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                             #datas = parse_dy(content['data']['data'])                           
                             if not has_more:
                                 print(uid + '_Dynamic overtime has stopped fetching')
@@ -184,7 +186,8 @@ def fetch_dy_list(uid,pool,user_agent):
                                     behot_time=x['create_time']
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                                     if is_again_working:
-                                        rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                        #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                        rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                 print(uid + '_Dynamic overtime has stopped fetching')
                                 return
                             elif has_more and len(original_data) != 0:
@@ -192,7 +195,8 @@ def fetch_dy_list(uid,pool,user_agent):
                                     behot_time=x['create_time']
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                                     if is_again_working:
-                                        rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                        #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                        rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                     else:
                                         print(uid + '_Dynamic overtime has stopped fetching')
                                         return
@@ -216,7 +220,11 @@ def  parse_dyList(pool,user_agents):
             #dda=rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8')
             #print(dda)
             #_data=json.loads(rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8'))
-            _data=eval(rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8'))
+            _data=rcli.spop('toutiao_dynamic_original_data')
+            if not _data:
+                time.sleep(2)
+                continue
+            _data=eval(_data.decode('utf-8'))
             uid=_data['uid']
             data_mid=_data['original_data']
             datas = parse_dy(data_mid,user_agent)
