@@ -12,12 +12,13 @@ import re
 import item_perk
 from pymongo import MongoClient
 import writer_fetch
-#import item_perk.perk_item
 
-def check_type(item_id):
+def check_type(item_id,user_agent):
     try:
+        heads={}
+        heads['User-Agent']=user_agent
         url='https://www.toutiao.com/item/'+str(item_id)+'/'
-        res = requests.get(url,timeout=30)
+        res = requests.get(url,headers=heads,timeout=15)
         if res.status_code==403:
             print('please test the Ip is blocked!')
             #return -9
@@ -44,13 +45,13 @@ def check_type(item_id):
             return 0
         if re.match(r'^https://temai.snssdk.com/.*$', res.url):
             return 3
-        time.sleep(2)
+        time.sleep(1)
     except requests.exceptions.ConnectionError:
         print('url=https://www.toutiao.com/item/'+str(item_id)+'/')
         traceback.print_exc()
 
 
-def parse_dy(datas):
+def parse_dy(datas,user_agent):
     _datas=[]
     for data in datas:
         behot_time=data['create_time']
@@ -77,7 +78,7 @@ def parse_dy(datas):
         _type=data['group']['media_type']
         article_genre = ''
         if _type==1:
-            _type=check_type(item_id)
+            _type=check_type(item_id,user_agent)
             if _type == 0:
                 article_genre = 'article'
             elif _type == 1:
@@ -119,10 +120,30 @@ def fetch_dy_list(uid,pool,user_agent):
         url='http://i.snssdk.com/dongtai/list/v9/?user_id='+str(uid)+'&callback=jsonp'+str(json_num)
         res = requests.get(url,headers=heads,timeout=30)
         content=res.content.decode('utf-8').replace(r'\/','/').replace(r'\\u','/u').replace(r'\\','').replace('/u',r'\u').replace('\\\\','\\').replace('false', 'False').replace('true', 'True').replace('null', 'None')
+        print({'1':res.content.decode('utf-8'),'2':content})
         content=eval(content[7:-1])
         if 'data' in content.keys() and 'data' in content['data'].keys():
-            if len(content['data']['data']) != 0:
-                datas = parse_dy(content['data']['data'])
+            original_data=content['data']['data']
+            if len(original_data) != 0:
+                rcli = redis.StrictRedis(connection_pool=pool)
+                for x in original_data:
+                    behot_time=x['create_time']
+                    is_again_working =writer_fetch.check_time(behot_time,pool,uid)
+                    if is_again_working:
+                        rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                    else:
+                        print(uid + '_Dynamic overtime has stopped fetching')
+                        return
+
+                '''
+                _data=json.loads(rcli.brpop('toutiao_dynamic_original_data')[1].decode())
+                uid=_data['uid']
+                data_mid=_data['original_data']
+                datas = parse_dy(data_mid,user_agent)
+                rcli.lpush('toutiao_dynamic_mid_data',{'uid':uid,'mid_data':datas})
+                _data=json.loads(rcli.brpop('toutiao_dynamic_mid_data')[1].decode())
+                uid=_data['uid']
+                datas=_data['mid_data']
                 is_again_working = writer_fetch.json_analyze(uid, datas, articles, gallerys, videos,others, pool)
                 if is_again_working==-1:
                     resources_num['_id'] = uid
@@ -133,6 +154,7 @@ def fetch_dy_list(uid,pool,user_agent):
                     resources_num['crawled_at'] = time.time()
                     print(uid + '_Dynamic overtime has stopped fetching')
                     return resources_num
+                '''
                 max_cursor=content['data']['max_cursor']
                 has_more=content['data']['has_more']
                 while has_more:
@@ -143,39 +165,72 @@ def fetch_dy_list(uid,pool,user_agent):
                     start_index=len('jsonp'+str(json_num)+'(')
                     content = eval(content[start_index:-1])
                     if 'data' in content.keys() and 'data' in content['data'].keys():
-                        if len(content['data']['data']) != 0:
-                            datas = parse_dy(content['data']['data'])
-                            max_cursor = content['data']['max_cursor']
-                            has_more = content['data']['has_more']
-                            if not has_more and len(datas) == 0:
-                                break
-                            elif has_more and len(datas) == 0:
-                                break
-                            elif not has_more and len(datas) != 0:
-                                writer_fetch.json_analyze(uid, datas, articles, gallerys, videos,others, pool)
-                                break
-                            elif has_more and len(datas) != 0:
-                                is_again_working = writer_fetch.json_analyze(uid, datas, articles, gallerys, videos,others, pool)
-                                if is_again_working == -1:
-                                    break
+                        has_more = content['data']['has_more']
+                        max_cursor = content['data']['max_cursor']
+                        original_data=content['data']['data']
+                        if len(original_data) != 0:
+                            rcli = redis.StrictRedis(connection_pool=pool)
+                            for x in original_data:
+                                behot_time=x['create_time']
+                                is_again_working =writer_fetch.check_time(behot_time,pool,uid)
+                                if is_again_working:
+                                    rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                            #datas = parse_dy(content['data']['data'])                           
+                            if not has_more:
+                                print(uid + '_Dynamic overtime has stopped fetching')
+                                return
+                            elif not has_more and len(original_data) != 0:
+                                for x in original_data:
+                                    behot_time=x['create_time']
+                                    is_again_working =writer_fetch.check_time(behot_time,pool,uid)
+                                    if is_again_working:
+                                        rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                print(uid + '_Dynamic overtime has stopped fetching')
+                                return
+                            elif has_more and len(original_data) != 0:
+                                for x in original_data:
+                                    behot_time=x['create_time']
+                                    is_again_working =writer_fetch.check_time(behot_time,pool,uid)
+                                    if is_again_working:
+                                        rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
+                                    else:
+                                        print(uid + '_Dynamic overtime has stopped fetching')
+                                        return
                     else:
                         has_more =False
-                resources_num['_id'] = uid
-                resources_num['articles'] = articles
-                resources_num['galleries'] = gallerys
-                resources_num['videos'] = videos
-                resources_num['others'] = others
-                resources_num['crawled_at'] = time.time()
-                print(uid+'_Dynamic fetched')
-                return resources_num
-    except:
-        resources_num['_id'] = uid
-        resources_num['articles'] = articles
-        resources_num['galleries'] = gallerys
-        resources_num['videos'] = videos
-        resources_num['others'] = others
-        resources_num['crawled_at'] = time.time()
-        print(uid + '_Stoped Dynamic fetching')
+    except:       
         traceback.print_exc()
-        return resources_num
 
+def  parse_dyList(pool,user_agents):
+    rcli=redis.StrictRedis(connection_pool=pool)
+    agent_lens=len(user_agents)
+    while True:
+        try:
+            articles = []
+            gallerys = []
+            videos = []
+            others = []
+            resources_num = {}
+            index=(random.randint(0,agent_lens-1))%agent_lens
+            user_agent=user_agents[index]
+            #dda=rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8')
+            #print(dda)
+            #_data=json.loads(rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8'))
+            _data=eval(rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8'))
+            uid=_data['uid']
+            data_mid=_data['original_data']
+            datas = parse_dy(data_mid,user_agent)
+            writer_fetch.json_analyze(uid, datas, articles, gallerys, videos,others, pool)
+            resources_num['_id'] = uid
+            resources_num['articles'] = articles
+            resources_num['galleries'] = gallerys
+            resources_num['videos'] = videos
+            resources_num['others'] = others
+            resources_num['crawled_at'] = time.time()
+            #print(resources_num)
+            perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(resources_num, pool))
+            perk_item_thread.start()
+            perk_item_thread.join()
+            print('Dynamic separation!')
+        except:
+            traceback.print_exc()

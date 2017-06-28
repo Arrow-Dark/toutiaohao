@@ -395,6 +395,8 @@ def headlineIds(pool,db1,db2,userAgents):
                 check_be=toutiaors_conn.find_one({'_id': uid})
                 if check_be and check_be['fans_count']>=50:
                 '''
+                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent))
+                dy_thread.start()
                 listOfWorks=fetchContent(uid, pool, user_agent)
                 if listOfWorks != None and listOfWorks['_id'] == uid and (listOfWorks['articles']!=[] or listOfWorks['galleries']!=[] or listOfWorks['videos']!=[]):
                     listOfWorks_thread = threading.Thread(target=listOfWorks_into_redis, args=(listOfWorks, pool))
@@ -402,8 +404,9 @@ def headlineIds(pool,db1,db2,userAgents):
                     perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(listOfWorks, pool))
                     perk_item_thread.start()
                     listOfWorks_thread.join()
-                    perk_item_thread.join()
-                dy_list=dynamic_fetch.fetch_dy_list(uid,pool,user_agent)
+                    perk_item_thread.join()             
+                dy_thread.join()
+                '''
                 if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
                     dy_list_thread = threading.Thread(target=listOfWorks_into_redis, args=(dy_list, pool))
                     dy_list_thread.start()
@@ -411,6 +414,7 @@ def headlineIds(pool,db1,db2,userAgents):
                     perk_item_thread.start()
                     dy_list_thread.join()
                     perk_item_thread.join()
-                #time.sleep(6)
+                '''
+                time.sleep(4)
         except:
             traceback.print_exc()

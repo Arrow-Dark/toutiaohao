@@ -47,7 +47,7 @@ def to_es_body(info_gal,index_name,type_name):
 def fetchGallerys(es,db,gallery,user_agent):
     #conn = db.articles
     heads={}
-    #heads['User-Agent']=user_agent
+    heads['User-Agent']=user_agent
     try:
         if gallery != None and gallery != {}:
             info_gal = {}
@@ -115,7 +115,7 @@ def fetchGallerys(es,db,gallery,user_agent):
 def fetchArticles(es,db,article,user_agent):
     #conn = db.articles
     heads = {}
-    #heads['User-Agent'] = user_agent
+    heads['User-Agent'] = user_agent
     try:
         if article!=None and article!={}:
             info_gal = {}
@@ -202,7 +202,7 @@ def fetchVideos(es,db,video):
 def fetchOthers(es,db,other,user_agent):
     #conn = db.articles
     heads = {}
-    #heads['User-Agent'] = user_agent
+    heads['User-Agent'] = user_agent
     try:
         if other!=None and other!={}:
             info_gal = {}
