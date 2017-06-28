@@ -33,7 +33,7 @@ def fetchWriterTitle(uid,user_agent):
         #print(res_html.status_code)
         if res_html.status_code==200:
             html=res_html.content.decode('utf-8')
-            bs=BeautifulSoup(html,'xml')
+            bs=BeautifulSoup(html,'html.parser')
             scripts=bs.find(attrs={"type": "text/javascript"})
             #print(scripts)
             script_heads=scripts.text.replace('\n','').replace(' ','').split(';')
@@ -394,18 +394,20 @@ def headlineIds(pool,db1,db2,userAgents):
                         wirterTitles_into_mongo(wirterTitles, db)
                 check_be=toutiaors_conn.find_one({'_id': uid})
                 if check_be and check_be['fans_count']>=50:
-                '''
-                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent))
-                dy_thread.start()
+                '''   
+                         
                 listOfWorks=fetchContent(uid, pool, user_agent)
                 if listOfWorks != None and listOfWorks['_id'] == uid and (listOfWorks['articles']!=[] or listOfWorks['galleries']!=[] or listOfWorks['videos']!=[]):
                     listOfWorks_thread = threading.Thread(target=listOfWorks_into_redis, args=(listOfWorks, pool))
+                    _items=listOfWorks['articles']+listOfWorks['galleries']+listOfWorks['videos']
+                    dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,_items))
+                    dy_thread.start()
                     listOfWorks_thread.start()
                     perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(listOfWorks, pool))
                     perk_item_thread.start()
                     listOfWorks_thread.join()
                     perk_item_thread.join()             
-                dy_thread.join()
+                    dy_thread.join()
                 '''
                 if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
                     dy_list_thread = threading.Thread(target=listOfWorks_into_redis, args=(dy_list, pool))

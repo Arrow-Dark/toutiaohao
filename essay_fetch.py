@@ -59,7 +59,7 @@ def fetchGallerys(es,db,gallery,user_agent):
             except requests.exceptions.Timeout:
                 res = requests.get(source_url, headers=heads, timeout=15)
             if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
-                bs = BeautifulSoup(res.content.decode('utf-8'), 'xml')
+                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
                 #print(uid,item_id)
                 script_len=len(bs.select('body script'))
                 #print(script_len)
@@ -130,7 +130,7 @@ def fetchArticles(es,db,article,user_agent):
                 article_content=[]
                 article_imgs = []
                 labels=[]
-                bs = BeautifulSoup(res.content.decode('utf-8'), 'xml')
+                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
                 tags_p=(bs.select('div.article-content div p') if len(bs.select('div.article-content div p')) else bs.select('div.article-content p'))
                 for p in tags_p:
                     imgs = p.select('img')
@@ -217,7 +217,7 @@ def fetchOthers(es,db,other,user_agent):
                 other_content=[]
                 other_imgs = []
                 labels=[]
-                bs = BeautifulSoup(res.content.decode('utf-8'), 'xml')
+                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
                 contents = bs.select('figcaption')
                 imgs = bs.select('img[alt-src]')
                 for img in imgs:

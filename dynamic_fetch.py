@@ -23,7 +23,7 @@ def check_type(item_id,user_agent):
             print('please test the Ip is blocked!')
             #return -9
         if re.match(r'^http://www.toutiao.com/i.*$', res.url):
-            bs = BeautifulSoup(res.content.decode('utf-8'), 'xml')
+            bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
             scripts = bs.select('body script')
             if not len(scripts):
                 print('Data not caught, please test the Ip is blocked!')
@@ -107,7 +107,14 @@ def parse_dy(datas,user_agent):
             _datas.append(_data)
     return _datas
 
-def fetch_dy_list(uid,pool,user_agent):
+def check_exist(items,item_id):
+    for item in items:
+        if item_id in item.values():
+            return False
+        else:
+            return True
+
+def fetch_dy_list(uid,pool,user_agent,_items):
     heads={}
     heads['User-Agent']=user_agent
     articles = []
@@ -120,16 +127,20 @@ def fetch_dy_list(uid,pool,user_agent):
         url='http://i.snssdk.com/dongtai/list/v9/?user_id='+str(uid)+'&callback=jsonp'+str(json_num)
         res = requests.get(url,headers=heads,timeout=30)
         content=res.content.decode('utf-8').replace(r'\/','/').replace(r'\\u','/u').replace(r'\\','').replace('/u',r'\u').replace('\\\\','\\').replace('false', 'False').replace('true', 'True').replace('null', 'None')
-        #print({'1':res.content.decode('utf-8'),'2':content})
         content=eval(content[7:-1])
         if 'data' in content.keys() and 'data' in content['data'].keys():
             original_data=content['data']['data']
             if len(original_data) != 0:
                 rcli = redis.StrictRedis(connection_pool=pool)
                 for x in original_data:
+                    try:
+                        item_id = str(x['group']['item_id'])
+                    except KeyError:
+                        item_id = str(x['item_id'])
                     behot_time=x['create_time']
+                    is_exist=check_exist(_items,item_id)
                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
-                    if is_again_working:
+                    if is_again_working and is_exist:
                         #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                         rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                     else:
@@ -172,9 +183,14 @@ def fetch_dy_list(uid,pool,user_agent):
                         if len(original_data) != 0:
                             rcli = redis.StrictRedis(connection_pool=pool)
                             for x in original_data:
+                                try:
+                                    item_id = str(x['group']['item_id'])
+                                except KeyError:
+                                    item_id = str(x['item_id'])
                                 behot_time=x['create_time']
+                                is_exist=check_exist(_items,item_id)
                                 is_again_working =writer_fetch.check_time(behot_time,pool,uid)
-                                if is_again_working:
+                                if is_again_working and is_exist:
                                     #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                     rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                             #datas = parse_dy(content['data']['data'])                           
@@ -183,18 +199,28 @@ def fetch_dy_list(uid,pool,user_agent):
                                 return
                             elif not has_more and len(original_data) != 0:
                                 for x in original_data:
+                                    try:
+                                        item_id = str(x['group']['item_id'])
+                                    except KeyError:
+                                        item_id = str(x['item_id'])
                                     behot_time=x['create_time']
+                                    is_exist=check_exist(_items,item_id)
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
-                                    if is_again_working:
+                                    if is_again_working and is_exist:
                                         #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                         rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                 print(uid + '_Dynamic overtime has stopped fetching')
                                 return
                             elif has_more and len(original_data) != 0:
                                 for x in original_data:
+                                    try:
+                                        item_id = str(x['group']['item_id'])
+                                    except KeyError:
+                                        item_id = str(x['item_id'])
                                     behot_time=x['create_time']
+                                    is_exist=check_exist(_items,item_id)
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
-                                    if is_again_working:
+                                    if is_again_working and is_exist:
                                         #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                         rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                     else:
@@ -220,6 +246,7 @@ def  parse_dyList(pool,user_agents):
             #dda=rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8')
             #print(dda)
             #_data=json.loads(rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8'))
+            #_data=eval(rcli.brpop('toutiao_dynamic_original_data')[1].decode('utf-8'))
             _data=rcli.spop('toutiao_dynamic_original_data')
             if not _data:
                 time.sleep(2)
