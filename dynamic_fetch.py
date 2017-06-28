@@ -17,7 +17,7 @@ def check_type(item_id,user_agent):
     try:
         heads={}
         heads['User-Agent']=user_agent
-        url='https://www.toutiao.com/item/'+str(item_id)+'/'
+        url='http://www.toutiao.com/item/'+str(item_id)+'/'
         res = requests.get(url,headers=heads,timeout=15)
         if res.status_code==403:
             print('please test the Ip is blocked!')
