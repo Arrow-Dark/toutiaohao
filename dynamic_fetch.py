@@ -194,7 +194,10 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                                 try:
                                     item_id = str(x['group']['item_id'])
                                 except KeyError:
-                                    item_id = str(x['item_id'])
+                                    try:
+                                        item_id = str(x['item_id'])
+                                    except KeyError:
+                                        continue
                                 behot_time=x['create_time']
                                 is_exist=check_exist(items_id,item_id)
                                 is_again_working =writer_fetch.check_time(behot_time,pool,uid)
@@ -210,7 +213,10 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                                     try:
                                         item_id = str(x['group']['item_id'])
                                     except KeyError:
-                                        item_id = str(x['item_id'])
+                                        try:
+                                            item_id = str(x['item_id'])
+                                        except KeyError:
+                                            continue
                                     behot_time=x['create_time']
                                     is_exist=check_exist(items_id,item_id)
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
@@ -224,7 +230,10 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                                     try:
                                         item_id = str(x['group']['item_id'])
                                     except KeyError:
-                                        item_id = str(x['item_id'])
+                                        try:
+                                            item_id = str(x['item_id'])
+                                        except KeyError:
+                                            continue
                                     behot_time=x['create_time']
                                     is_exist=check_exist(items_id,item_id)
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)

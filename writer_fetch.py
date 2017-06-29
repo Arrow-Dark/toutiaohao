@@ -135,22 +135,22 @@ def str2duration(sTime):
 def json_analyze(uid,datas,articles,galleries,videos,others,pool):
     with open(os.path.abspath('.') + '/PhoneID' + '/phone_id.txt', 'r', encoding='utf-8') as f:
         line=f.read()
-    for data in datas:
-        id_dict = eval(line)
-        iid='9198954949'
-        device_id='35699373946'
-        device_platform='android'
-        if 'iid' in id_dict.keys() and id_dict['iid']!='':
-            iid=id_dict['iid']
-        if 'device_id' in id_dict.keys() and id_dict['device_id']!='':
-            device_id=id_dict['device_id']
-        if 'device_platform' in id_dict.keys() and id_dict['device_platform']!='':
-            device_platform=id_dict['device_platform']
+    id_dict = eval(line)
+    iid='9198954949'
+    device_id='35699373946'
+    device_platform='android'
+    if 'iid' in id_dict.keys() and id_dict['iid']!='':
+        iid=id_dict['iid']
+    if 'device_id' in id_dict.keys() and id_dict['device_id']!='':
+        device_id=id_dict['device_id']
+    if 'device_platform' in id_dict.keys() and id_dict['device_platform']!='':
+        device_platform=id_dict['device_platform']
+    for data in datas:       
         behot_time=data['behot_time']
         global is_again_working
         is_again_working=check_time(behot_time,pool,uid)
         if not is_again_working:
-            break
+            continue
         genre = data['article_genre']
         if genre == 'article' and ('video_duration_str' not in data.keys()):
             url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
