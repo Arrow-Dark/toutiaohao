@@ -399,8 +399,12 @@ def headlineIds(pool,db1,db2,userAgents):
                 listOfWorks=fetchContent(uid, pool, user_agent)
                 if listOfWorks != None and listOfWorks['_id'] == uid and (listOfWorks['articles']!=[] or listOfWorks['galleries']!=[] or listOfWorks['videos']!=[]):
                     listOfWorks_thread = threading.Thread(target=listOfWorks_into_redis, args=(listOfWorks, pool))
-                    _items=listOfWorks['articles']+listOfWorks['galleries']+listOfWorks['videos']
-                    dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,_items))
+                    items_=listOfWorks['articles']+listOfWorks['galleries']+listOfWorks['videos']
+                    items_id=[]
+                    for x in items_:
+                        if 'item_id' in x.keys():
+                            items_id.append(x['item_id'])
+                    dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id))
                     dy_thread.start()
                     listOfWorks_thread.start()
                     perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(listOfWorks, pool))

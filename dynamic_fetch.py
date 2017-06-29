@@ -107,14 +107,13 @@ def parse_dy(datas,user_agent):
             _datas.append(_data)
     return _datas
 
-def check_exist(items,item_id):
-    for item in items:
-        if item_id in item.values():
-            return False
-        else:
-            return True
+def check_exist(items_id,item_id):
+    if item_id in items_id:
+        return False
+    else:
+        return True
 
-def fetch_dy_list(uid,pool,user_agent,_items):
+def fetch_dy_list(uid,pool,user_agent,items_id):
     heads={}
     heads['User-Agent']=user_agent
     articles = []
@@ -138,7 +137,7 @@ def fetch_dy_list(uid,pool,user_agent,_items):
                     except KeyError:
                         item_id = str(x['item_id'])
                     behot_time=x['create_time']
-                    is_exist=check_exist(_items,item_id)
+                    is_exist=check_exist(items_id,item_id)
                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                     if is_again_working and is_exist:
                         #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
@@ -188,7 +187,7 @@ def fetch_dy_list(uid,pool,user_agent,_items):
                                 except KeyError:
                                     item_id = str(x['item_id'])
                                 behot_time=x['create_time']
-                                is_exist=check_exist(_items,item_id)
+                                is_exist=check_exist(items_id,item_id)
                                 is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                                 if is_again_working and is_exist:
                                     #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
@@ -204,7 +203,7 @@ def fetch_dy_list(uid,pool,user_agent,_items):
                                     except KeyError:
                                         item_id = str(x['item_id'])
                                     behot_time=x['create_time']
-                                    is_exist=check_exist(_items,item_id)
+                                    is_exist=check_exist(items_id,item_id)
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                                     if is_again_working and is_exist:
                                         #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
@@ -218,7 +217,7 @@ def fetch_dy_list(uid,pool,user_agent,_items):
                                     except KeyError:
                                         item_id = str(x['item_id'])
                                     behot_time=x['create_time']
-                                    is_exist=check_exist(_items,item_id)
+                                    is_exist=check_exist(items_id,item_id)
                                     is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                                     if is_again_working and is_exist:
                                         #rcli.lpush('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
