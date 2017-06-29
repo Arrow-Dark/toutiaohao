@@ -20,9 +20,15 @@ def check_type(item_id,user_agent):
         url='http://www.toutiao.com/item/'+str(item_id)+'/'
         res = requests.get(url,headers=heads,timeout=15)
         if res.status_code==403:
+            print(url,res.status_code)
             print('please test the Ip is blocked!')
-            #return -9
-        if re.match(r'^http://www.toutiao.com/i.*$', res.url):
+            while True:
+                minutes=random.randint(1,10)
+                time.sleep(minutes*60)
+                res = requests.get(source_url, headers=heads, timeout=15)
+                if res.status_code==200:
+                    break
+        if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
             bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
             scripts = bs.select('body script')
             if not len(scripts):
@@ -36,7 +42,7 @@ def check_type(item_id,user_agent):
                 max_index = _len.index(max(_len))
             except ValueError:
                max_index =3
-               print(url,res.status_code)
+               #print(url,res.status_code)
                traceback.print_exc()
             user_info = scripts[max_index].text.replace(' ', '').split(';\n')
             for i in user_info:
@@ -45,7 +51,7 @@ def check_type(item_id,user_agent):
             return 0
         if re.match(r'^https://temai.snssdk.com/.*$', res.url):
             return 3
-        time.sleep(1)
+        time.sleep(3)
     except requests.exceptions.ConnectionError:
         print('url=https://www.toutiao.com/item/'+str(item_id)+'/')
         traceback.print_exc()
