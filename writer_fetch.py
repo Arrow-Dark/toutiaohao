@@ -273,6 +273,19 @@ def fetchContent(uid,pool,user_agent):
                         cook =''
                     heads['Cookie'] = cook
                 json_dict = json.loads(res_json.content.decode('utf-8'))
+                if 'data' not in json_dict:
+                    print('please test the Ip is blocked!')
+                    _count=0
+                    while True:
+                        _count+=1
+                        minutes=random.randint(1,10)
+                        time.sleep(minutes*60)
+                        res = requests.get(url_json, headers=heads, timeout=30)
+                        json_dict = json.loads(res.content.decode('utf-8'))
+                        if res.status_code==200 and 'data' in json_dict:
+                            break
+                        if _count>=3:
+                            break
                 datas = json_dict['data']
                 has_more = json_dict['has_more']
                 if not has_more and len(datas) == 0:

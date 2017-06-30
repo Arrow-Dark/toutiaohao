@@ -19,14 +19,18 @@ def check_type(item_id,user_agent):
         heads['User-Agent']=user_agent
         url='http://www.toutiao.com/item/'+str(item_id)+'/'
         res = requests.get(url,headers=heads,timeout=15)
-        if res.status_code==403:
+        bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
+        scripts = bs.select('body script')
+        if res.status_code==403 or len(scripts)==0:
             print(url,res.status_code)
             print('please test the Ip is blocked!')
             while True:
                 minutes=random.randint(1,10)
                 time.sleep(minutes*60)
-                res = requests.get(source_url, headers=heads, timeout=15)
-                if res.status_code==200:
+                res = requests.get(url, headers=heads, timeout=15)
+                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
+                scripts = bs.select('body script')
+                if res.status_code==200 and len(scripts):
                     break
         if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
             bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
