@@ -136,7 +136,7 @@ def fetchArticles(es,db,article,user_agent):
             except requests.exceptions.Timeout:
                 res = requests.get(source_url, headers=heads, timeout=15)
             if res.status_code==403:
-                print(url,res.status_code)
+                print(source_url,res.status_code)
                 print('please test the Ip is blocked!')
                 while True:
                     minutes=random.randint(1,10)
