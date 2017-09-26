@@ -61,12 +61,12 @@ def fetchGallerys(es,db,gallery,user_agent):
             if res.status_code==403:
                 print(source_url,res.status_code)
                 print('please test the Ip is blocked!')
-                while True:
-                    minutes=random.randint(1,10)
-                    time.sleep(minutes*60)
-                    res = requests.get(source_url, headers=heads, timeout=15)
-                    if res.status_code==200:
-                        break
+                # while True:
+                #     minutes=random.randint(1,10)
+                #     time.sleep(minutes*60)
+                #     res = requests.get(source_url, headers=heads, timeout=15)
+                #     if res.status_code==200:
+                #         break
             if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
                 bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
                 #print(uid,item_id)
@@ -138,12 +138,12 @@ def fetchArticles(es,db,article,user_agent):
             if res.status_code==403:
                 print(source_url,res.status_code)
                 print('please test the Ip is blocked!')
-                while True:
-                    minutes=random.randint(1,10)
-                    time.sleep(minutes*60)
-                    res = requests.get(source_url, headers=heads, timeout=15)
-                    if res.status_code==200:
-                        break
+                # while True:
+                #     minutes=random.randint(1,10)
+                #     time.sleep(minutes*60)
+                #     res = requests.get(source_url, headers=heads, timeout=15)
+                #     if res.status_code==200:
+                #         break
             if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
                 article_content=[]
                 article_imgs = []
@@ -234,12 +234,12 @@ def fetchOthers(es,db,other,user_agent):
             if res.status_code==403:
                 print(source_url,res.status_code)
                 print('please test the Ip is blocked!')
-                while True:
-                    minutes=random.randint(1,10)
-                    time.sleep(minutes*60)
-                    res = requests.get(source_url, headers=heads, timeout=15)
-                    if res.status_code==200:
-                        break
+                # while True:
+                #     minutes=random.randint(1,10)
+                #     time.sleep(minutes*60)
+                #     res = requests.get(source_url, headers=heads, timeout=15)
+                #     if res.status_code==200:
+                #         break
             if re.match(r'^https://temai.snssdk.com/.*$', res.url) and res.status_code==200:
                 other_content=[]
                 other_imgs = []
@@ -366,6 +366,7 @@ def fetch_working(pool,es,db1,db2,userAgents):
             print('The resources is stored in the cache queue, waiting to be pushed into the Elasticsearch!')
         except:
             traceback.print_exc()
+        time.sleep(10)
 
 def fetch_essay(pool,es,db1,db2,userAgents):
     try:

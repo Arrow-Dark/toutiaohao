@@ -19,7 +19,7 @@ import dynamic_fetch
 
 def moreWriterFetch(rpool,db1,db2,user_agents):
     thread_list=[]
-    for i in range(2):
+    for i in range(1):
         t=threading.Thread(target=writer_fetch.headlineIds,args=(rpool,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
@@ -29,7 +29,7 @@ def moreWriterFetch(rpool,db1,db2,user_agents):
 
 def moreFetchEssay(rpool,es,db1,db2,user_agents):
     thread_list = []
-    for i in range(2):
+    for i in range(1):
         t = threading.Thread(target=essay_fetch.fetch_essay,args=(rpool,es,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
@@ -58,7 +58,7 @@ def check_start(pool):
             searchKeyWord.cur_tab_url_open(pool)
             rcli.rpoplpush('_pang', '_ping')
             print(hostName + ':End fetching uid, return uid fetch permissions!')
-            time.sleep(1)
+            time.sleep(3)
         except redis.exceptions.ConnectionError:
             print(hostName + ':Disconnect from redis, suggest repair links and restart crawlers!')
             traceback.print_exc()

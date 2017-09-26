@@ -244,6 +244,7 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool):
                 videos.append(video)
         elif genre == 'other':
             others.append(data)
+    time.sleep(8)
     if not is_again_working:
         return -1
 
@@ -308,6 +309,7 @@ def fetchContent(uid,pool,user_agent):
                     f.write('------------------------------------------\n\n')
                     traceback.print_exc()
                 break
+            time.sleep(10)
         else:
             return
     resources_num['_id'] = uid
@@ -434,6 +436,6 @@ def headlineIds(pool,db1,db2,userAgents):
                     dy_list_thread.join()
                     perk_item_thread.join()
                 '''
-                time.sleep(4)
+            time.sleep(8)
         except:
             traceback.print_exc()
