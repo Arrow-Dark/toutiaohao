@@ -366,7 +366,7 @@ def fetch_working(pool,es,db1,db2,userAgents):
             print('The resources is stored in the cache queue, waiting to be pushed into the Elasticsearch!')
         except:
             traceback.print_exc()
-        time.sleep(10)
+        time.sleep(3)
 
 def fetch_essay(pool,es,db1,db2,userAgents):
     try:

@@ -24,14 +24,14 @@ def check_type(item_id,user_agent):
         if res.status_code==403 or len(scripts)==0:
             print(url,res.status_code)
             print('please test the Ip is blocked!')
-            while True:
-                minutes=random.randint(1,10)
-                time.sleep(minutes*60)
-                res = requests.get(url, headers=heads, timeout=15)
-                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
-                scripts = bs.select('body script')
-                if res.status_code==200 and len(scripts):
-                    break
+            # while True:
+            #     minutes=random.randint(1,10)
+            #     time.sleep(minutes*60)
+            #     res = requests.get(url, headers=heads, timeout=15)
+            #     bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
+            #     scripts = bs.select('body script')
+            #     if res.status_code==200 and len(scripts):
+            #         break
         if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
             bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
             scripts = bs.select('body script')
@@ -55,7 +55,7 @@ def check_type(item_id,user_agent):
             return 0
         if re.match(r'^https://temai.snssdk.com/.*$', res.url):
             return 3
-        time.sleep(5)
+        #time.sleep(3)
     except requests.exceptions.ConnectionError:
         print('url=https://www.toutiao.com/item/'+str(item_id)+'/')
         traceback.print_exc()
@@ -181,7 +181,7 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                 '''
                 max_cursor=content['data']['max_cursor']
                 has_more=content['data']['has_more']
-                time.sleep(10)
+                time.sleep(3)
                 while has_more:
                     json_num+=1
                     url='http://i.snssdk.com/dongtai/list/v9/?user_id='+str(uid)+'&max_cursor='+str(max_cursor)+'&callback=jsonp'+str(json_num)
@@ -250,7 +250,7 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                                         return
                     else:
                         has_more =False
-                    time.sleep(10)
+                    time.sleep(3)
     except:       
         traceback.print_exc()
 
