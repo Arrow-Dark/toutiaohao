@@ -181,7 +181,7 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                 '''
                 max_cursor=content['data']['max_cursor']
                 has_more=content['data']['has_more']
-                time.sleep(3)
+                time.sleep(1)
                 while has_more:
                     json_num+=1
                     url='http://i.snssdk.com/dongtai/list/v9/?user_id='+str(uid)+'&max_cursor='+str(max_cursor)+'&callback=jsonp'+str(json_num)
@@ -250,7 +250,7 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                                         return
                     else:
                         has_more =False
-                    time.sleep(3)
+                    time.sleep(1)
     except:       
         traceback.print_exc()
 

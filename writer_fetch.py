@@ -244,7 +244,7 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool):
                 videos.append(video)
         elif genre == 'other':
             others.append(data)
-    time.sleep(2)
+    time.sleep(1)
     if not is_again_working:
         return -1
 
@@ -309,7 +309,7 @@ def fetchContent(uid,pool,user_agent):
                     f.write('------------------------------------------\n\n')
                     traceback.print_exc()
                 break
-            time.sleep(2)
+            time.sleep(1)
         else:
             return
     resources_num['_id'] = uid
