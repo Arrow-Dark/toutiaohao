@@ -85,8 +85,8 @@ def fetchWriterTitle(uid,user_agent):
 
 def check_time(behot_time,pool,uid):
     rcli = redis.StrictRedis(connection_pool=pool)
-    if rcli.hexists('item_AG_hash',uid):
-        item=eval(rcli.hget('item_AG_hash',uid).decode())
+    if rcli.hexists('item_AGV_hash',uid):
+        item=eval(rcli.hget('item_AGV_hash',uid).decode())
         crawled_at=item['crawled_at']
         can_fech_time=crawled_at-(3*24*60*60)
         if behot_time>=can_fech_time:
@@ -425,7 +425,7 @@ def headlineIds(pool,db1,db2,userAgents):
                     perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(listOfWorks, pool))
                     perk_item_thread.start()
                     listOfWorks_thread.join()
-                    perk_item_thread.join()             
+                    perk_item_thread.join()
                     dy_thread.join()
                 '''
                 if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
