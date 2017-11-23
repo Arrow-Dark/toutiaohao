@@ -135,8 +135,9 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
         json_num=1
         url='http://i.snssdk.com/dongtai/list/v9/?user_id='+str(uid)+'&callback=jsonp'+str(json_num)
         res = requests.get(url,headers=heads,timeout=30)
-        content=res.content.decode('utf-8').replace(r'\/','/').replace(r'\\u','/u').replace(r'\\','').replace('/u',r'\u').replace('\\\\','\\').replace('false', 'False').replace('true', 'True').replace('null', 'None')
-        content=eval(content[7:-1])
+        #content=res.content.decode('utf-8').replace(r'\/','/').replace(r'\\u','/u').replace(r'\\','').replace('/u',r'\u').replace('\\\\','\\').replace('false', 'False').replace('true', 'True').replace('null', 'None')
+        content=res.content.decode('utf-8')
+        content=json.loads(content[7:-1])
         if 'data' in content.keys() and 'data' in content['data'].keys():
             original_data=content['data']['data']
             if len(original_data) != 0:

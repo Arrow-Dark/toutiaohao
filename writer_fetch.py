@@ -88,13 +88,13 @@ def check_time(behot_time,pool,uid):
     if rcli.hexists('item_AGV_hash',uid):
         item=eval(rcli.hget('item_AGV_hash',uid).decode())
         crawled_at=item['crawled_at']
-        can_fech_time=crawled_at-(3*24*60*60)
+        can_fech_time=crawled_at-(15*24*60*60)
         if behot_time>=can_fech_time:
             return 1
         else:
             return 0
     else:
-        can_fech_time=(time.time())-(3*24*60*60)
+        can_fech_time=(time.time())-(15*24*60*60)
         if behot_time>=can_fech_time:
             return 1
         else:
