@@ -208,3 +208,93 @@ Traceback (most recent call last):
 requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response',))
 ------------------------------------------
 
+2017-12-11 14:22:22:
+Traceback (most recent call last):
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 316, in fetchContent
+    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool)
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 175, in json_analyze
+    _dict=json.loads(res.content.decode('utf-8'))
+  File "C:\MyUtils\Python35\lib\json\__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-12-11 17:13:30:
+Traceback (most recent call last):
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 322, in fetchContent
+    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool)
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 211, in json_analyze
+    _dict=json_po(res.content.decode('utf-8'))
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 152, in json_po
+    return json.loads(sa_e)
+  File "C:\MyUtils\Python35\lib\json\__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-12-11 17:16:30:
+Traceback (most recent call last):
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 324, in fetchContent
+    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool)
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 241, in json_analyze
+    _dict=json_po(res.content.decode('utf-8'))
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 152, in json_po
+    return json.loads(sa_e)
+  File "C:\MyUtils\Python35\lib\json\__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-12-11 17:23:31:
+Traceback (most recent call last):
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 324, in fetchContent
+    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool)
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 182, in json_analyze
+    _dict=json.loads(res.content.decode('utf-8'))
+  File "C:\MyUtils\Python35\lib\json\__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+
+2017-12-12 10:36:44:
+Traceback (most recent call last):
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 337, in fetchContent
+    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool,user_agent)
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 254, in json_analyze
+    _dict=json_po(res.read())
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 150, in json_po
+    sa=_str.split(', ')
+TypeError: a bytes-like object is required, not 'str'
+------------------------------------------
+
+2017-12-12 12:57:18:
+Traceback (most recent call last):
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 338, in fetchContent
+    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool,user_agent)
+  File "C:\SharedSpace\toutiaohao\writer_fetch.py", line 184, in json_analyze
+    _dict=json.loads(res.content.decode('utf-8'))
+  File "C:\MyUtils\Python35\lib\json\__init__.py", line 319, in loads
+    return _default_decoder.decode(s)
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "C:\MyUtils\Python35\lib\json\decoder.py", line 357, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+------------------------------------------
+

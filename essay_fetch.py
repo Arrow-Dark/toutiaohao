@@ -307,7 +307,7 @@ def item_to_es(pool):
                 print(str(len(articles_to_es)) + 'articles pushed into Elasticsearch')
                 del articles_to_es[0:len(articles_to_es)]
             traceback.print_exc()
-        time.sleep(3)
+        time.sleep(2)
 
 def toutiaor_join_article(item,db):
     try:
@@ -366,7 +366,7 @@ def fetch_working(pool,es,db1,db2,userAgents):
             print('The resources is stored in the cache queue, waiting to be pushed into the Elasticsearch!')
         except:
             traceback.print_exc()
-        time.sleep(3)
+        time.sleep(2)
 
 def fetch_essay(pool,es,db1,db2,userAgents):
     try:

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-
 import os
 import random
 import requests
+import urllib
 import json
 from bs4 import BeautifulSoup
 import time
@@ -14,11 +14,12 @@ import re
 import item_perk
 import dynamic_fetch
 from pymongo import MongoClient
+#import Drivers
 
 def fetchWriterTitle(uid,user_agent):
     try:
         heads={}
-        #heads['User-Agent'] = user_agent
+        heads['User-Agent'] = user_agent
         avtar_img = ''
         name = ''
         abstract = ''
@@ -27,20 +28,26 @@ def fetchWriterTitle(uid,user_agent):
         url_html = 'http://www.toutiao.com/c/user/' + str(uid) + '/'
         #print(url_html)
         try:
-            res_html = requests.get(url_html, timeout=30)
+            #res = requests.get(url, timeout=30)
+            req=urllib.request.Request(url_html,headers=heads)
+            res=urllib.request.urlopen(req)
         except requests.exceptions.Timeout:
-            res_html = requests.get(url_html, timeout=30)
+            #res = requests.get(url, timeout=30)
+            req=urllib.request.Request(url_html,headers=heads)
+            res=urllib.request.urlopen(req)
         #print(res_html.status_code)
-        if res_html.status_code==200:
-            html=res_html.content.decode('utf-8')
+        if res.status==200:
+            #html=res_html.content.decode('utf-8')
+            html=res.read().decode('utf-8')
             bs=BeautifulSoup(html,'html.parser')
-            scripts=bs.find(attrs={"type": "text/javascript"})
+            #scripts=bs.find(attrs={"type": "text/javascript"})
+            scripts=bs.select_one('script[type="text/javascript"]')#[type="text/javascript"]
             #print(scripts)
             script_heads=scripts.text.replace('\n','').replace(' ','').split(';')
             #print(script_heads)
             #time.sleep(3)
-            script_statistics=scripts.find_next_sibling().text.replace('\n','').replace(' ','').split(';')
-            #print(scripts[0].find_next_sibling())
+            script_statistics=scripts.find_next_sibling().find_next_sibling().text.replace('\n','').replace(' ','').split(';')
+            print(script_statistics)
             for attr in script_heads:
                 attr=attr.strip()
                 if re.match('^.*header=.*$',attr):
@@ -48,20 +55,23 @@ def fetchWriterTitle(uid,user_agent):
                     for head in heads:
                         head=head.strip()
                         if re.match('^avtar_img:.*$',head):
-                            avtar_img=head.split(':')[1]+':'+head.split(':')[2]
+                            avtar_img='http:'+head.split(':')[-1]
                         elif re.match('^name:.*$',head):
                             name = head.split(':')[1]
                         elif re.match('^abstract:.*$',head):
                             abstract = head.split(':')[1]
             for attr in script_statistics:
                 attr = attr.strip()
+                print(attr)
                 if re.match('^.*statistics.*$',attr):
                     statistics=attr.split('{')[1].split('}')[0].replace('\n','').replace(' ','').replace("'",'').split(',')
                     for statistic in statistics:
                         statistic=statistic.strip()
                         if re.match('^guanzhu:.*$',statistic):
+                            print(statistic)
                             guanzhu=statistic.split(':')[1]
                         elif re.match('^fensi:.*$',statistic):
+                            print(statistic)
                             fensi = statistic.split(':')[1]
             toutiaors = {
             '_id':uid,
@@ -89,12 +99,14 @@ def check_time(behot_time,pool,uid):
         item=eval(rcli.hget('item_AGV_hash',uid).decode())
         crawled_at=item['crawled_at']
         can_fech_time=crawled_at-(15*24*60*60)
+        #can_fech_time=time.mktime(time.strptime('2017-10-01',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
             return 1
         else:
             return 0
     else:
         can_fech_time=(time.time())-(15*24*60*60)
+        #can_fech_time=time.mktime(time.strptime('2017-10-01',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
             return 1
         else:
@@ -132,10 +144,18 @@ def str2duration(sTime):
         return 0
 
 
-def json_analyze(uid,datas,articles,galleries,videos,others,pool):
+def json_po(_str):
+    #print(_str)
+    sa=_str.replace(r'\"',"'").replace(r'\n','').replace(r'\t','')
+    #sa_f=list(x for x in sa if not re.match(r'^.*"open_page_url": "sslocal:',x) and not re.match(r'^.*"context":',x) and not re.match(r'^.*"script":',x) and not re.match(r'^"is.snssdk.com"',x) and not re.match(r'^.*"log_extra"',x) and not re.match(r'^.*"req_id"',x) and not re.match(r'^{*"impr_id"',x) and not re.match(r'^.*"ac=wifi',x) and not re.match(r'^.*ame=',x) and not re.match(r'"ignore_web_transform"',x))
+    #sa_e=', '.join(sa_f)
+    return json.loads(sa)
+
+def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
     with open(os.path.abspath('.') + '/PhoneID' + '/phone_id.txt', 'r', encoding='utf-8') as f:
         line=f.read()
     id_dict = eval(line)
+    headers = { 'User-Agent' : user_agent }
     iid='9198954949'
     device_id='35699373946'
     device_platform='android'
@@ -156,11 +176,17 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool):
             url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
             print('Start grabbing phone information')
             try:
-                res = requests.get(url, timeout=30)
+                #res = requests.get(url, timeout=30)
+                req=urllib.request.Request(url,headers=headers)
+                res=urllib.request.urlopen(req)
             except requests.exceptions.Timeout:
-                res = requests.get(url, timeout=30)
-            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.url):
-                _dict=json.loads(res.content.decode('utf-8'))
+                #res = requests.get(url, timeout=30)
+                req=urllib.request.Request(url,headers=headers)
+                res=urllib.request.urlopen(req)
+            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.geturl()):
+                text=res.read().decode('utf-8')
+                _dict=json_po(text)
+                #_dict=json_po(res.content.decode('utf-8'))
                 print('The mobile phone information grabs the end')
                 article_dict=check_phone(_dict)
                 like_count = 0
@@ -183,11 +209,18 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool):
             url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
             print('Start grabbing phone information')
             try:
-                res = requests.get(url, timeout=30)
+                #res = requests.get(url, timeout=30)
+                req=urllib.request.Request(url,headers=headers)
+                res=urllib.request.urlopen(req)
             except requests.exceptions.Timeout:
-                res = requests.get(url, timeout=30)
-            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.url):
-                _dict = json.loads(res.content.decode('utf-8'))
+                #res = requests.get(url, timeout=30)
+                req=urllib.request.Request(url,headers=headers)
+                res=urllib.request.urlopen(req)
+            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.geturl()):
+                text=res.read().decode('utf-8')
+                _dict=json_po(text)
+                #_dict = json.loads(res.read().decode('utf-8'))
+                #_dict=json_po(res.content.decode('utf-8'))
                 print('The mobile phone information grabs the end')
                 gallery_dict = check_phone(_dict)
                 like_count = 0
@@ -210,11 +243,19 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool):
             url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
             print('Start grabbing phone information')
             try:
-                res = requests.get(url, timeout=30)
+                #res = requests.get(url, timeout=30)
+                req=urllib.request.Request(url,headers=headers)
+                res=urllib.request.urlopen(req)
             except requests.exceptions.Timeout:
-                res = requests.get(url, timeout=30)
-            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.url):
-                _dict = json.loads(res.content.decode('utf-8'))
+                #res = requests.get(url, timeout=30)
+                req=urllib.request.Request(url,headers=headers)
+                res=urllib.request.urlopen(req)
+            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.geturl()):
+                #_dict = json.loads(res.content.decode('utf-8'))
+                print(url==res.geturl())
+                text=res.read().decode('utf-8')
+                print('text_length:',len(text))
+                _dict=json_po(text)
                 print('The mobile phone information grabs the end')
                 video_dict = check_phone(_dict)
                 digg_count=0
@@ -294,10 +335,10 @@ def fetchContent(uid,pool,user_agent):
                 elif has_more and len(datas) == 0:
                     break
                 elif not has_more and len(datas) != 0:
-                    json_analyze(uid,datas, articles, gallerys, videos,others,pool)
+                    json_analyze(uid,datas, articles, gallerys, videos,others,pool,user_agent)
                     break
                 elif has_more and len(datas) != 0:
-                    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool)
+                    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool,user_agent)
                     if is_again_working==-1:
                         break
                     max_behot_time = json_dict['next']['max_behot_time']
@@ -318,7 +359,8 @@ def fetchContent(uid,pool,user_agent):
     resources_num['videos'] = videos
     resources_num['others'] = others
     resources_num['crawled_at'] = time.time()
-    print(uid + '_This user information is captured!')
+    print(uid + '_This user content information is captured!')
+    print(uid,len(articles),len(gallerys),len(videos),len(others))
     return resources_num
 
 
@@ -386,6 +428,9 @@ def listOfWorks_into_redis(listOfWorks,pool):
 def headlineIds(pool,db1,db2,userAgents):
     rcli = redis.StrictRedis(connection_pool=pool)
     agent_lens=len(userAgents)
+    #uids=['56221239740','58562576245','4212960515','52900612083','56156150735']
+    #uids=['58562576245']
+    #while True:
     while True:
         try:
             '''
@@ -400,6 +445,7 @@ def headlineIds(pool,db1,db2,userAgents):
             index=(random.randint(0,agent_lens-1))%agent_lens
             user_agent=userAgents[index]
             uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list',0).decode()
+            #uid=uids.pop()
             print('Geted the user id_'+uid)
             if uid != None:
                 '''
@@ -407,12 +453,14 @@ def headlineIds(pool,db1,db2,userAgents):
                     wirterTitles = fetchWriterTitle(uid,user_agent)
                     if wirterTitles != None and wirterTitles['_id'] == uid:
                         wirterTitles_into_mongo(wirterTitles, db)
-                check_be=toutiaors_conn.find_one({'_id': uid})
-                if check_be and check_be['fans_count']>=50:
+                        print(wirterTitles)
+                #check_be=toutiaors_conn.find_one({'_id': uid})
+                # if check_be and check_be['fans_count']>=50:
                 '''   
                          
                 listOfWorks=fetchContent(uid, pool, user_agent)
-                if listOfWorks != None and listOfWorks['_id'] == uid and (listOfWorks['articles']!=[] or listOfWorks['galleries']!=[] or listOfWorks['videos']!=[]):
+                #if listOfWorks['_id'] == uid and (listOfWorks['articles']!=[] or listOfWorks['galleries']!=[] or listOfWorks['videos']!=[]):
+                if listOfWorks['_id'] == uid :
                     listOfWorks_thread = threading.Thread(target=listOfWorks_into_redis, args=(listOfWorks, pool))
                     items_=listOfWorks['articles']+listOfWorks['galleries']+listOfWorks['videos']
                     items_id=[]
@@ -436,6 +484,6 @@ def headlineIds(pool,db1,db2,userAgents):
                     dy_list_thread.join()
                     perk_item_thread.join()
                 '''
-            time.sleep(5)
+            time.sleep(2)
         except:
             traceback.print_exc()
