@@ -147,8 +147,6 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                         #is_exist=False if item_id in items_id else True
                         is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                         if is_again_working:# and is_exist:
-                            if re.match(r'^http://toutiao.com/dongtai/.*$',x['share_url']):
-                                continue
                             rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]}) 
                             con+=1
                         else:
