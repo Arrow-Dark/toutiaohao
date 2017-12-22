@@ -390,11 +390,17 @@ def fetch_working(pool,es,db1,db2,userAgents):
 def fetch_essay(pool,es,db1,db2,userAgents):
     try:
         t1=threading.Thread(target=fetch_working,args=(pool,es,db1,db2,userAgents))
+        t3=threading.Thread(target=fetch_working,args=(pool,es,db1,db2,userAgents))
+        t4=threading.Thread(target=fetch_working,args=(pool,es,db1,db2,userAgents))
         t2 = threading.Thread(target=item_to_es, args=(pool,))
         t1.start()
         t2.start()
         t1.join()
         t2.join()
+        t3.start()
+        t4.start()
+        t3.join()
+        t4.join()
     except:
         traceback.print_exc()
 

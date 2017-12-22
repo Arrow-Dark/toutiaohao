@@ -52,7 +52,7 @@ def workingThread(rpool,es,db1,db2,user_agents):
     
     t4.start()
     t5.start()
-    t6.start()
+    #t6.start()
 
 def check_start(pool):
     rcli = redis.StrictRedis(connection_pool=pool)
