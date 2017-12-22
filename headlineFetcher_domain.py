@@ -10,7 +10,7 @@ import essay_fetch
 import os
 import time
 import traceback
-import searchKeyWord
+#import searchKeyWord
 from elasticsearch import Elasticsearch
 import socket
 import random
@@ -19,23 +19,23 @@ import dynamic_fetch
 
 def moreWriterFetch(rpool,db1,db2,user_agents):
     thread_list=[]
-    for i in range(2):
+    for i in range(1):
         t=threading.Thread(target=writer_fetch.headlineIds,args=(rpool,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
         th.start()
-    for th in thread_list:
-        th.join()
+    # for th in thread_list:
+    #     th.join()
 
 def moreFetchEssay(rpool,es,db1,db2,user_agents):
     thread_list = []
-    for i in range(2):
+    for i in range(1):
         t = threading.Thread(target=essay_fetch.fetch_essay,args=(rpool,es,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
         th.start()
-    for th in thread_list:
-        th.join()
+    # for th in thread_list:
+    #     th.join()
 
 def workingThread(rpool,es,db1,db2,user_agents):
     t1=threading.Thread(target=moreWriterFetch,args=(rpool, db1,db2,user_agents))
@@ -47,8 +47,9 @@ def workingThread(rpool,es,db1,db2,user_agents):
     #t3=threading.Thread(target=check_start, args=(rpool,))
     #t4 = threading.Thread(target=check_ball, args=(rpool,))
     t1.start()
-    t2.start()
     t3.start()
+    t2.start()
+    
     t4.start()
     t5.start()
     t6.start()
@@ -117,6 +118,7 @@ def pro_pool_():
     mon_url='mongodb://' + mon_user + ':' + mon_pwd + '@' + mon_host + ':' + mon_port +'/'+ mon_dn+'?maxPoolSize=8'
     mon_url2 = 'mongodb://' + mon2_user + ':' + mon2_pwd + '@' + mon2_host + ':' + mon2_port + '/' + mon2_dn+'?maxPoolSize=8'
     rpool = redis.ConnectionPool(host=red_host, port=red_port,password=red_pwd)
+    #rpool = redis.ConnectionPool(host='127.0.0.1', port=6379)
     #rpool = redis.ConnectionPool(host='127.0.0.1', port=6379)
     es = Elasticsearch([es_url], http_auth=(es_name, es_pwd), port=es_port)
     #es = Elasticsearch([{'host': '127.0.0.1', 'port': 9200}])

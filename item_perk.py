@@ -6,6 +6,8 @@ import sys
 import traceback
 import threading
 import redis
+import writer_fetch
+
 
 def perkArticles(uid,articles,pool):
     try:
@@ -18,9 +20,9 @@ def perkArticles(uid,articles,pool):
                         'item_id': article['item_id'],
                         'title': article['title'],
                         'duration': 0,
-                        'read_count': article['go_detail_count'],
+                        'read_count': article['go_detail_count'] if 'go_detail_count' in article.keys() else 0,
                         'comments_count': article['comments_count'],
-                        'up_count': article['like_count'],
+                        'up_count': article['like_count'] if 'like_count' in article.keys() else 0,
                         'down_count':0,
                         'behot_time': article['behot_time']
                     }
@@ -75,6 +77,7 @@ def perkVideos(uid,videos,pool):
                         'behot_time': video['behot_time']
                     }
                     item['type'] = 2
+                    print('item_type',item['type'])
                     rcli.lpush('item_AGV_list', item)
     except:
         traceback.print_exc()
@@ -141,19 +144,12 @@ class perkOthersThread(threading.Thread):
 def perk_item(listOfWorks,pool):
     uid=listOfWorks['_id']
     articles=listOfWorks['articles']
-    galleries = listOfWorks['galleries']
     videos = listOfWorks['videos']
-    others=listOfWorks['others']
     t_articles=perkArticlesThread(uid,articles,pool)
-    t_galleries = perkGalleriesThread(uid, galleries, pool)
     t_videos = perkVideosThread(uid, videos, pool)
-    t_others=perkOthersThread(uid, others, pool)
     t_articles.start()
-    t_galleries.start()
     t_videos.start()
-    t_others.start()
     t_articles.join()
-    t_galleries.join()
     t_videos.join()
-    t_others.join()
+    writer_fetch.listOfWorks_into_redis(listOfWorks,pool)
     print('The list of articles is sorted, and the queue of articles waits to be resolved!')

@@ -25,20 +25,26 @@ def fetchWriterTitle(uid,user_agent):
         abstract = ''
         guanzhu = 0
         fensi = 0
-        url_html = 'http://www.toutiao.com/c/user/' + str(uid) + '/'
+        url_html = 'https://www.toutiao.com/c/user/' + str(uid) + '/'
         #print(url_html)
         try:
             #res = requests.get(url, timeout=30)
             req=urllib.request.Request(url_html,headers=heads)
             res=urllib.request.urlopen(req)
+            # driver=Drivers.get_chrome(user_agent)
+            # driver.get(url_html)
+            # time.sleep(3)
         except requests.exceptions.Timeout:
             #res = requests.get(url, timeout=30)
             req=urllib.request.Request(url_html,headers=heads)
             res=urllib.request.urlopen(req)
         #print(res_html.status_code)
+        html=driver.page_source()
+        res.status=200
+        driver.quit()
         if res.status==200:
             #html=res_html.content.decode('utf-8')
-            html=res.read().decode('utf-8')
+            #html=res.read().decode('utf-8')
             bs=BeautifulSoup(html,'html.parser')
             #scripts=bs.find(attrs={"type": "text/javascript"})
             scripts=bs.select_one('script[type="text/javascript"]')#[type="text/javascript"]
@@ -98,15 +104,15 @@ def check_time(behot_time,pool,uid):
     if rcli.hexists('item_AGV_hash',uid):
         item=eval(rcli.hget('item_AGV_hash',uid).decode())
         crawled_at=item['crawled_at']
-        #can_fech_time=crawled_at-(15*24*60*60)
-        can_fech_time=time.mktime(time.strptime('2017-10-28',"%Y-%m-%d"))
+        can_fech_time=crawled_at-(3*24*60*60)
+        #can_fech_time=time.mktime(time.strptime('2017-10-28',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
             return 1
         else:
             return 0
     else:
-        #can_fech_time=(time.time())-(15*24*60*60)
-        can_fech_time=time.mktime(time.strptime('2017-10-28',"%Y-%m-%d"))
+        #can_fech_time=(time.time())-(1*24*60*60)
+        can_fech_time=time.mktime(time.strptime('2017-07-15',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
             return 1
         else:
@@ -152,6 +158,7 @@ def json_po(_str):
     return json.loads(sa)
 
 def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
+    print('into json_analyze!')
     with open(os.path.abspath('.') + '/PhoneID' + '/phone_id.txt', 'r', encoding='utf-8') as f:
         line=f.read()
     id_dict = eval(line)
@@ -165,12 +172,13 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
         device_id=id_dict['device_id']
     if 'device_platform' in id_dict.keys() and id_dict['device_platform']!='':
         device_platform=id_dict['device_platform']
-    for data in datas:       
+    for data in datas:   
+        #print('json_analyze',data)    
         behot_time=data['behot_time']
         global is_again_working
         is_again_working=check_time(behot_time,pool,uid)
-        if not is_again_working:
-            continue
+        # if not is_again_working:
+        #     continue
         genre = data['article_genre']
         if genre == 'article' and ('video_duration_str' not in data.keys()):
             url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
@@ -246,7 +254,7 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
                 #res = requests.get(url, timeout=30)
                 req=urllib.request.Request(url,headers=headers)
                 res=urllib.request.urlopen(req)
-            except requests.exceptions.Timeout:
+            except :
                 #res = requests.get(url, timeout=30)
                 req=urllib.request.Request(url,headers=headers)
                 res=urllib.request.urlopen(req)
@@ -305,7 +313,7 @@ def fetchContent(uid,pool,user_agent):
             res_json = requests.get(url_json, headers=heads, timeout=30)
         except requests.exceptions.Timeout:
             res_json = requests.get(url_json, headers=heads, timeout=30)
-        #print(res_json.status_code)
+        print('fetchContent',res_json.status_code)
         if res_json.status_code == 200:
             try:
                 if max_behot_time == 0:
@@ -411,10 +419,13 @@ def wirterTitles_into_mongo(wirterTitles,db):
 def listOfWorks_into_redis(listOfWorks,pool):
     try:
         rcli = redis.StrictRedis(connection_pool=pool)
-        with rcli.pipeline() as pipe:
-            pipe.multi()
-            pipe.hset('item_AGV_hash',listOfWorks['_id'],listOfWorks)
-            pipe.execute()
+        uid=listOfWorks['_id']
+        if rcli.hexists('item_AGV_hash',uid):
+            item=eval(rcli.hget('item_AGV_hash',uid).decode())
+            if listOfWorks['crawled_at']>item['crawled_at']:
+                rcli.hset('item_AGV_hash',uid,{'crawled_at':listOfWorks['crawled_at']})
+        else:
+            rcli.hset('item_AGV_hash',uid,{'crawled_at':listOfWorks['crawled_at']})
     except:
         '''
         with open(os.path.abspath('.') + '/errLogs' + '/listOfWorks_into_redis_log.txt', 'a', encoding='utf-8',
@@ -426,55 +437,56 @@ def listOfWorks_into_redis(listOfWorks,pool):
         traceback.print_exc()
 
 def headlineIds(pool,db1,db2,userAgents):
+    print('headlineIds')
     rcli = redis.StrictRedis(connection_pool=pool)
-    agent_lens=len(userAgents)
+    #agent_lens=len(userAgents)
     #uids=['56221239740','58562576245','4212960515','52900612083','56156150735']
     #uids=['58562576245']
     #while True:
     while True:
         try:
-            '''
-            if db1.client.is_primary :
-                db=db1
-                db2.client.close()
-            elif db2.client.is_primary :
-                db = db2
-                db1.client.close()
-            toutiaors_conn = db.toutiaors
-            '''
-            index=(random.randint(0,agent_lens-1))%agent_lens
-            user_agent=userAgents[index]
+            # if db1.client.is_primary :
+            #     db=db1
+            #     db2.client.close()
+            # elif db2.client.is_primary :
+            #     db = db2
+            #     db1.client.close()
+            #toutiaors_conn = db.toutiaors
+            user_agent=random.choice(userAgents)
             uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list',0).decode()
+            #uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list_bck',0).decode()
             #uid=uids.pop()
             print('Geted the user id_'+uid)
             if uid != None:
+                # if not toutiaors_conn.find_one({'_id': uid}):
+                #     wirterTitles = fetchWriterTitle(uid,user_agent)
+                #     if wirterTitles != None and wirterTitles['_id'] == uid:
+                #         wirterTitles_into_mongo(wirterTitles, db)
+                #         print(wirterTitles)
                 '''
-                if not toutiaors_conn.find_one({'_id': uid}):
-                    wirterTitles = fetchWriterTitle(uid,user_agent)
-                    if wirterTitles != None and wirterTitles['_id'] == uid:
-                        wirterTitles_into_mongo(wirterTitles, db)
-                        print(wirterTitles)
                 #check_be=toutiaors_conn.find_one({'_id': uid})
                 # if check_be and check_be['fans_count']>=50:
                 '''   
                          
-                listOfWorks=fetchContent(uid, pool, user_agent)
+                # listOfWorks=fetchContent(uid, pool, user_agent)
+                # print('listOfWorks',listOfWorks)
                 #if listOfWorks['_id'] == uid and (listOfWorks['articles']!=[] or listOfWorks['galleries']!=[] or listOfWorks['videos']!=[]):
-                if listOfWorks['_id'] == uid :
-                    listOfWorks_thread = threading.Thread(target=listOfWorks_into_redis, args=(listOfWorks, pool))
-                    items_=listOfWorks['articles']+listOfWorks['galleries']+listOfWorks['videos']
-                    items_id=[]
-                    for x in items_:
-                        if 'item_id' in x.keys():
-                            items_id.append(x['item_id'])
-                    dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id))
-                    dy_thread.start()
-                    listOfWorks_thread.start()
-                    perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(listOfWorks, pool))
-                    perk_item_thread.start()
-                    listOfWorks_thread.join()
-                    perk_item_thread.join()
-                    dy_thread.join()
+                # if listOfWorks['_id'] == uid :
+                #     #listOfWorks_thread = threading.Thread(target=listOfWorks_into_redis, args=(listOfWorks, pool))
+                #     items_=listOfWorks['articles']+listOfWorks['galleries']+listOfWorks['videos']
+                #     items_id=[]
+                #     for x in items_:
+                #         if 'item_id' in x.keys():
+                #             items_id.append(x['item_id'])
+                items_id=[]
+                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id))
+                dy_thread.start()
+                #listOfWorks_thread.start()
+                #perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(listOfWorks, pool))
+                #perk_item_thread.start()
+                #listOfWorks_thread.join()
+                #perk_item_thread.join()
+                dy_thread.join()
                 '''
                 if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
                     dy_list_thread = threading.Thread(target=listOfWorks_into_redis, args=(dy_list, pool))
@@ -484,6 +496,6 @@ def headlineIds(pool,db1,db2,userAgents):
                     dy_list_thread.join()
                     perk_item_thread.join()
                 '''
-            time.sleep(2)
+            time.sleep(8)
         except:
             traceback.print_exc()

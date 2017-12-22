@@ -1,6 +1,7 @@
 import os
 import random
 import requests
+import urllib
 import json
 from bs4 import BeautifulSoup
 import time
@@ -13,44 +14,12 @@ import item_perk
 from pymongo import MongoClient
 import writer_fetch
 
-def check_type(item_id,user_agent):
+
+def parse_jsonp(jsonp_str):
     try:
-        heads={}
-        heads['User-Agent']=user_agent
-        url='http://www.toutiao.com/item/'+str(item_id)+'/'
-        res = requests.get(url,headers=heads,timeout=15)
-        bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
-        scripts = bs.select('body script')
-        if res.status_code==403 or len(scripts)==0:
-            print(url,res.status_code)
-            print('please test the Ip is blocked!')
-        if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
-            bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
-            scripts = bs.select('body script')
-            if not len(scripts):
-                print('Data not caught, please test the Ip is blocked!')
-            _len=[]
-            for x in scripts:
-                _len.append(x.text)
-            if not len(_len):
-                print('Data not caught, please test the Ip is blocked!')
-            try:
-                max_index = _len.index(max(_len))
-            except ValueError:
-               max_index =3
-               #print(url,res.status_code)
-               traceback.print_exc()
-            user_info = scripts[max_index].text.replace(' ', '').split(';\n')
-            for i in user_info:
-                if re.match(r'^.*vargallery.*$', i.strip()):
-                    return 1
-            return 0
-        if re.match(r'^https://temai.snssdk.com/.*$', res.url):
-            return 3
-        #time.sleep(3)
-    except requests.exceptions.ConnectionError:
-        print('url=https://www.toutiao.com/item/'+str(item_id)+'/')
-        traceback.print_exc()
+        return re.search('^[^(]*?\((.*)\)[^)]*$', jsonp_str).group(1)
+    except:
+        raise ValueError('Invalid JSONP')
 
 
 def parse_dy(datas,user_agent):
@@ -74,19 +43,14 @@ def parse_dy(datas,user_agent):
         img_url=''
         comments_count=data['comment_count']
         video_duration_str='0'
-        detail_play_effective_count=data['comment_count']+data['digg_count']
+        #detail_play_effective_count=data['comment_count']+data['digg_count']
+        detail_play_effective_count=data['read_count']
         go_detail_count=data['read_count']
         like_count=data['digg_count']
         _type=data['group']['media_type']
         article_genre = ''
         if _type==1:
-            _type=check_type(item_id,user_agent)
-            if _type == 0:
-                article_genre = 'article'
-            elif _type == 1:
-                article_genre = 'gallery'
-            elif _type == 3:
-                article_genre = 'other'
+            article_genre='article'
         elif _type==2:
             article_genre='video'
         del data
@@ -109,7 +73,6 @@ def parse_dy(datas,user_agent):
             _datas.append(_data)
     return _datas
 
-
 def fetch_dy_list(uid,pool,user_agent,items_id):
     print(uid,'start fetch_dy_list!')
     heads={}
@@ -126,32 +89,31 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
         has_more=True
         con=0
         while has_more:
-            #url='http://i.snssdk.com/dongtai/list/v9/?user_id='+str(uid)+'&max_cursor='+str(max_cursor)+'&callback=jsonp'+str(json_num)
             url='http://i.snssdk.com/dongtai/list/v9/?user_id={uid}&max_cursor={cursor}&callback=jsonp{num}'.format(uid=uid,cursor=max_cursor,num=json_num)
             res=requests.get(url,headers=heads,timeout=30)
-            #contents = res.content.decode('utf-8').replace('false', 'False').replace('true', 'True').replace('null', 'None')
             content = res.content.decode('utf-8')
-            start_index=len('jsonp'+str(json_num)+'(')
-            content = json.loads(content[start_index:-1])
+            content = parse_jsonp(content)
+            content = json.loads(content)
             if 'data' in content.keys() and 'data' in content['data'].keys():
                 has_more = content['data']['has_more']
                 max_cursor = content['data']['max_cursor']
                 original_data=content['data']['data']
                 if len(original_data) != 0:
                     for x in original_data:
-                        try:
-                            item_id = x['item_id_str']
-                        except KeyError:
-                            continue
-                        behot_time=x['create_time']
-                        #is_exist=False if item_id in items_id else True
-                        is_again_working =writer_fetch.check_time(behot_time,pool,uid)
-                        if is_again_working:# and is_exist:
-                            rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]}) 
-                            con+=1
-                        else:
-                            has_more=False
-                            break
+                        if re.match(r'^http.*://toutiao.com/item/.*$',x['share_url']):
+                            try:
+                                item_id = x['item_id_str']
+                            except KeyError:
+                                continue
+                            behot_time=x['create_time']
+                            #is_exist=False if item_id in items_id else True
+                            is_again_working =writer_fetch.check_time(behot_time,pool,uid)
+                            if is_again_working:# and is_exist:
+                                rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]}) 
+                                con+=1
+                            else:
+                                has_more=False
+                                break
                     print(uid,con,'page:',json_num)
                 if not has_more:
                     print(uid + '_Dynamic overtime has stopped fetching')
@@ -159,7 +121,7 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
             else:
                 has_more =False
             json_num+=1
-            time.sleep(1)
+            time.sleep(2)
     except:       
         traceback.print_exc()
 
@@ -173,8 +135,7 @@ def  parse_dyList(pool,user_agents):
             videos = []
             others = []
             resources_num = {}
-            index=(random.randint(0,agent_lens-1))%agent_lens
-            user_agent=user_agents[index]
+            user_agent=random.choice(user_agents)
             _data=rcli.spop('toutiao_dynamic_original_data')
             if not _data:
                 continue
@@ -189,7 +150,6 @@ def  parse_dyList(pool,user_agents):
             resources_num['videos'] = videos
             resources_num['others'] = others
             resources_num['crawled_at'] = time.time()
-            #print(resources_num)
             perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(resources_num, pool))
             perk_item_thread.start()
             perk_item_thread.join()

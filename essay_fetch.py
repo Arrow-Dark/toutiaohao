@@ -44,74 +44,117 @@ def to_es_body(info_gal,index_name,type_name):
     return info_action
 
 
-def fetchGallerys(es,db,gallery,user_agent):
-    #conn = db.articles
+
+def check_type(html):
+    try:
+        bs = BeautifulSoup(html, 'html.parser')
+        scripts = bs.select('body script')
+        if len(scripts):
+            _len=list(x.text for x in scripts if re.match(r'^var BASE_DATA.*',x.text))
+            if len(_len):
+                user_info = _len[0].replace(' ', '').split('\n') if len(_len) else []
+                if not len(user_info):
+                    print('user_info is empty!')
+                    return -1
+            else:
+                return -1
+            for i in user_info:
+                if re.match(r'^.*galleryInfo.*$', i.strip()):
+                    return 1
+                elif re.match(r'^.*articleInfo.*$', i.strip()):
+                    return 0
+        else:
+            return -1
+    except :
+        traceback.print_exc()
+        return -1
+
+def rep_resouce(es,db,item,rcli,user_agent):
     heads={}
     heads['User-Agent']=user_agent
+    try:
+        if item != None and item != {}:
+            info_gal = {}
+            item_id = item['item_id']
+            uid = item['uid']
+            source_url = 'http://www.toutiao.com/item/' + str(item_id)+'/'
+            try:
+                res = requests.get(source_url,headers=heads, timeout=15)
+            except requests.exceptions.Timeout:
+                res = requests.get(source_url, headers=heads, timeout=15)
+            html=res.content.decode('utf-8')
+            if re.match(r'^.*://.*toutiao.com/.*$', res.url) and res.status_code==200:
+                _type=check_type(html)
+                item['type']=_type
+                if _type==0:
+                    item_article=fetchArticles(es,db,item,html)
+                    if item_article!=None and item_article!={} and item_article['content']!='':
+                        item_article=to_es_body(item_article,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
+                        rcli.lpush('item_ES_list',item_article)
+                elif _type==1:
+                    item_gallery = fetchGallerys(es,db, item,html)
+                    if item_gallery!=None and item_gallery!={} and len(item_gallery['images']):
+                        item_gallery = to_es_body(item_gallery,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
+                        rcli.lpush('item_ES_list', item_gallery)
+            elif re.match(r'^https://temai.snssdk.com/.*$', res.url):
+                item_other = fetchVideos(es,db,item,html)
+                if item_other != None and item_other != {}:
+                    item_other = to_es_body(item_other,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
+                    rcli.lpush('item_ES_list', item_other)
+            else:
+                rcli.lpush('item_AGV_list',item)
+    except:
+        rcli.lpush('item_AGV_list',item)
+        traceback.print_exc()
+    
+
+def fetchGallerys(es,db,gallery,html):
     try:
         if gallery != None and gallery != {}:
             info_gal = {}
             item_id = gallery['item_id']
             uid = gallery['uid']
-            source_url = 'http://www.toutiao.com/item/' + str(item_id)+'/#p=1'
-            try:
-                res = requests.get(source_url,headers=heads, timeout=15)
-            except requests.exceptions.Timeout:
-                res = requests.get(source_url, headers=heads, timeout=15)
-            if res.status_code==403:
-                print(source_url,res.status_code)
-                print('please test the Ip is blocked!')
-                # while True:
-                #     minutes=random.randint(1,10)
-                #     time.sleep(minutes*60)
-                #     res = requests.get(source_url, headers=heads, timeout=15)
-                #     if res.status_code==200:
-                #         break
-            if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
-                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
-                #print(uid,item_id)
-                script_len=len(bs.select('body script'))
-                #print(script_len)
-                if script_len<3:
-                    #print(uid,item_id)
-                    traceback.print_exc()
-                user_info = bs.select('body script')[2].text.replace(' ', '').split(';\n')
-                info=''
-                for i in user_info:
-                    if re.match(r'^var.*gallery.*$', i):
-                        info =i
-                        info.strip()
-                #print(type(info))
-                if re.match(r'^var.*gallery.*$',info):
-                    infos = info.split('=')
-                    info_str =('='.join(infos[1:]))
-                    info_spl=info_str.strip().replace('\/', '/').replace('false', 'False').replace('true', 'True').replace('null', 'None')
-                    #print(uid,item_id,info_spl)
-                    gallery_info = eval(info_spl)
-                    #print(gallery_info['labels'])
-                    labels = gallery_info['labels']
-                    info_gal['labels'] = labels
-                    images = (x['url'] for x in gallery_info['sub_images'])
-                    info_gal['images']=list(images)
-                    info_gal['content'] = '\n'.join(gallery_info['sub_abstracts'])
-                    info_gal['title']=gallery['title']
-                    info_gal['duration']=gallery['duration']
-                    info_gal['read_count']=gallery['read_count']
-                    info_gal['comments_count']=gallery['comments_count']
-                    info_gal['up_count']=gallery['up_count']
-                    info_gal['down_count']=gallery['down_count']
-                    info_gal['type']=gallery['type']
-                    info_gal['published_at']=int(gallery['behot_time']*1000)
-                    info_gal['toutiaor_id'] = uid
-                    info_gal['_id'] = item_id
-                    info_gal['crawled_at'] = int(time.time()*1000)
-                    info_gal['avatar_img'] = gallery['avatar_img']
-                    info_gal['name'] = gallery['name']
-                    info_gal['introduction'] = gallery['introduction']
-                    info_gal['follower_count'] = gallery['follower_count']
-                    info_gal['fans_count'] = gallery['fans_count']
-                    print(item_id,'This atlas has been resolved!')
-                    return info_gal
+            bs = BeautifulSoup(html, 'html.parser')
+            #print(uid,item_id)
+            scripts=bs.select('body script')
+            #print(script_len)
+            _len=list(x.text for x in scripts if re.match(r'^var BASE_DATA.*',x.text))
+            user_info = _len[0].replace(' ', '').split('\n')
+            info=''
+            for i in user_info:
+                if re.match(r'^.*gallery:.*JSON.parse.*$', i):
+                    info =i
+                    info.strip()
+                    break
+            #print(type(info))
+            if info!='':
+                info_json=info[info.index('{'):info.rindex('}')+1].replace(r'\"','"').replace(r'\\','\\')
+                #print(uid,item_id,info_spl)
+                gallery_info = json.loads(str(info_json))
+                #print(gallery_info['labels'])
+                labels = gallery_info['labels']
+                info_gal['labels'] = labels
+                images = (x['url'] for x in gallery_info['sub_images'])
+                info_gal['images']=list(images)
+                info_gal['content'] = '\n'.join(gallery_info['sub_abstracts'])
+                info_gal['title']=gallery['title']
+                info_gal['duration']=gallery['duration']
+                info_gal['read_count']=gallery['read_count']
+                info_gal['comments_count']=gallery['comments_count']
+                info_gal['up_count']=gallery['up_count']
+                info_gal['down_count']=gallery['down_count']
+                info_gal['type']=gallery['type']
+                info_gal['published_at']=int(gallery['behot_time']*1000)
+                info_gal['toutiaor_id'] = uid
+                info_gal['_id'] = item_id
+                info_gal['crawled_at'] = int(time.time()*1000)
+                info_gal['avatar_img'] = gallery['avatar_img']
+                info_gal['name'] = gallery['name']
+                info_gal['introduction'] = gallery['introduction']
+                info_gal['follower_count'] = gallery['follower_count']
+                info_gal['fans_count'] = gallery['fans_count']
+                print(item_id,'This atlas has been resolved!')
+                return info_gal
     except:
         with open(os.path.abspath('.') + '/fetchGallerys_log.txt', 'a', encoding='utf-8',
                   errors='ignore') as f:
@@ -121,35 +164,19 @@ def fetchGallerys(es,db,gallery,user_agent):
         traceback.print_exc()
 
 
-def fetchArticles(es,db,article,user_agent):
-    #conn = db.articles
-    heads = {}
-    heads['User-Agent'] = user_agent
+def fetchArticles(es,db,article,html):
     try:
         if article!=None and article!={}:
             info_gal = {}
             item_id = article['item_id']
             uid = article['uid']
-            source_url = 'http://www.toutiao.com/item/' + str(item_id)+'/'
-            try:
-                res = requests.get(source_url,headers=heads,timeout=15)
-            except requests.exceptions.Timeout:
-                res = requests.get(source_url, headers=heads, timeout=15)
-            if res.status_code==403:
-                print(source_url,res.status_code)
-                print('please test the Ip is blocked!')
-                # while True:
-                #     minutes=random.randint(1,10)
-                #     time.sleep(minutes*60)
-                #     res = requests.get(source_url, headers=heads, timeout=15)
-                #     if res.status_code==200:
-                #         break
-            if re.match(r'^http://www.toutiao.com/i.*$', res.url) and res.status_code==200:
-                article_content=[]
-                article_imgs = []
-                labels=[]
-                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
-                tags_p=(bs.select('div.article-content div p') if len(bs.select('div.article-content div p')) else bs.select('div.article-content p'))
+            article_content=[]
+            article_imgs = []
+            labels=[]
+            bs = BeautifulSoup(html, 'html.parser')
+            tags_p=(bs.select('div.article-content div p') if len(bs.select('div.article-content div p')) else bs.select('div.article-content p'))
+            #print(tags_p)
+            if len(tags_p):
                 for p in tags_p:
                     imgs = p.select('img')
                     styles = p.select('style')
@@ -158,12 +185,26 @@ def fetchArticles(es,db,article,user_agent):
                     elif len(styles) == 0:
                         for img in imgs:
                             article_imgs.append(img.get('src'))
+                labels=list(link.text for link in bs.select('ul.label-list li.label-item a.label-link'))
+            else:
+                scris=bs.select('body script')
+                scri=list(x.text for x in scris if re.match(r'^var BASE_DATA.*',x.text))
+                _text=scri[0][scri[0].index('{'):-1] if len(scri) else ''
+                con=list(x for x in _text.split('\n') if re.match(r'^.*content:.*',x))
+                _str=con[0].replace(' ','').replace('&lt;p','').replace('&lt','').replace(';/p','').replace('&quot','').replace('&gt','').replace('imgsrc&#x3D','')
+                article_content=list(x for x in _str.split(';') if re.match('^[\u4e00-\u9fa5]',x))
+                article_imgs=list(x for x in _str.split(';') if re.match('^http.*',x))
+
+                tags=list(x for x in _text.split('\n') if re.match(r'^.*tags:.*',x))
+                _str=con[0].replace(' ','').replace('&lt;p','').replace('&lt','').replace(';/p','').replace('&quot','').replace('&gt','').replace('imgsrc&#x3D','') if len(con) else ''
+                tags=tags[0].replace(' ','') if len(tags) else None
+                tag_list=eval(tags[tags.index('['):-1]) if tags else []
+                labels=list(y[0] for y in (list(x.values()) for x in tag_list))
+
                 article_content='\n'.join(article_content)
                 info_gal['content'] = article_content
                 info_gal['images'] = article_imgs
-                label_links=bs.select('ul.label-list li.label-item a.label-link')
-                for link in label_links:
-                    labels.append(link.text)
+                
                 info_gal['labels'] = labels
                 info_gal['title'] = article['title']
                 info_gal['duration'] = article['duration']
@@ -217,63 +258,45 @@ def fetchVideos(es,db,video):
     except:
         traceback.print_exc()
 
-def fetchOthers(es,db,other,user_agent):
-    #conn = db.articles
-    heads = {}
-    heads['User-Agent'] = user_agent
+def fetchOthers(es,db,other,html):
     try:
         if other!=None and other!={}:
             info_gal = {}
             item_id = other['item_id']
             uid = other['uid']
-            source_url = 'http://www.toutiao.com/item/' + str(item_id)+'/'
-            try:
-                res = requests.get(source_url,headers=heads,timeout=15)
-            except requests.exceptions.Timeout:
-                res = requests.get(source_url, headers=heads, timeout=15)
-            if res.status_code==403:
-                print(source_url,res.status_code)
-                print('please test the Ip is blocked!')
-                # while True:
-                #     minutes=random.randint(1,10)
-                #     time.sleep(minutes*60)
-                #     res = requests.get(source_url, headers=heads, timeout=15)
-                #     if res.status_code==200:
-                #         break
-            if re.match(r'^https://temai.snssdk.com/.*$', res.url) and res.status_code==200:
-                other_content=[]
-                other_imgs = []
-                labels=[]
-                bs = BeautifulSoup(res.content.decode('utf-8'), 'html.parser')
-                contents = bs.select('figcaption')
-                imgs = bs.select('img[alt-src]')
-                for img in imgs:
-                    img=img.get('alt-src')
-                    other_imgs.append(img)
-                for content in contents:
-                    other_content.append(content.text)
-                other_content='\n'.join(other_content)
-                info_gal['content'] = other_content
-                info_gal['images'] = other_imgs
-                info_gal['labels'] = labels
-                info_gal['title'] = other['title']
-                info_gal['duration'] = other['duration']
-                info_gal['read_count'] = other['read_count']
-                info_gal['comments_count'] = other['comments_count']
-                info_gal['up_count'] = other['up_count']
-                info_gal['down_count'] = other['down_count']
-                info_gal['type'] = 2
-                info_gal['published_at'] = int(other['behot_time']*1000)
-                info_gal['toutiaor_id'] = uid
-                info_gal['_id'] = item_id
-                info_gal['crawled_at'] = int(time.time()*1000)
-                info_gal['avatar_img'] = other['avatar_img']
-                info_gal['name'] = other['name']
-                info_gal['introduction'] = other['introduction']
-                info_gal['follower_count'] = other['follower_count']
-                info_gal['fans_count'] = other['fans_count']
-                print(item_id, 'The other atlas has been parsed')
-                return info_gal
+            other_content=[]
+            other_imgs = []
+            labels=[]
+            bs = BeautifulSoup(html, 'html.parser')
+            contents = bs.select('figcaption')
+            imgs = bs.select('img[alt-src]')
+            for img in imgs:
+                img=img.get('alt-src')
+                other_imgs.append(img)
+            for content in contents:
+                other_content.append(content.text)
+            other_content='\n'.join(other_content)
+            info_gal['content'] = other_content
+            info_gal['images'] = other_imgs
+            info_gal['labels'] = labels
+            info_gal['title'] = other['title']
+            info_gal['duration'] = other['duration']
+            info_gal['read_count'] = other['read_count']
+            info_gal['comments_count'] = other['comments_count']
+            info_gal['up_count'] = other['up_count']
+            info_gal['down_count'] = other['down_count']
+            info_gal['type'] = 2
+            info_gal['published_at'] = int(other['behot_time']*1000)
+            info_gal['toutiaor_id'] = uid
+            info_gal['_id'] = item_id
+            info_gal['crawled_at'] = int(time.time()*1000)
+            info_gal['avatar_img'] = other['avatar_img']
+            info_gal['name'] = other['name']
+            info_gal['introduction'] = other['introduction']
+            info_gal['follower_count'] = other['follower_count']
+            info_gal['fans_count'] = other['fans_count']
+            print(item_id, 'The other atlas has been parsed')
+            return info_gal
     except:
         traceback.print_exc()
 
@@ -284,13 +307,13 @@ def item_to_es(pool):
     headers={'Content-Type':'application/json'}
     while True:
         try:
-            if rcli.llen('item_ES_list')>=1000:
-                while rcli.llen('item_ES_list')>100:
+            if rcli.llen('item_ES_list')>=500:#1000
+                while rcli.llen('item_ES_list')>0:
                     _item=rcli.rpop('item_ES_list')
                     if _item!=None:
                         item = eval(_item.decode())
                         articles_to_es.append(item)
-                    if len(articles_to_es)>=500:
+                    if len(articles_to_es)>=250:
                         #helpers.bulk(es, articles_to_es, index='toutiao_articles_and_users', raise_on_error=True)
                         requests.post('http://59.110.52.213/stq/api/v1/pa/toutiao/add',headers=headers,data=json.dumps(articles_to_es))
                         print(str(len(articles_to_es))+'articles pushed into Elasticsearch')
@@ -331,8 +354,9 @@ def toutiaor_join_article(item,db):
 
 
 def fetch_working(pool,es,db1,db2,userAgents):
-    agent_lens = len(userAgents)
+    print('fetch_working')
     rcli = redis.StrictRedis(connection_pool=pool)
+    #rcli=redis.StrictRedis()
     db=''
     while True:
         try:
@@ -342,26 +366,21 @@ def fetch_working(pool,es,db1,db2,userAgents):
             elif db2.client.is_primary :
                 db = db2
                 db1.client.close()
-            index = (random.randint(0, agent_lens - 1)) % agent_lens
-            user_agent = userAgents[index]
+            user_agent = random.choice(userAgents)
+            
             item=eval(rcli.brpop('item_AGV_list')[1].decode())
+            #item=eval(rcli.brpoplpush('item_AGV_list','item_AGV_list_bck',0).decode())
             item=toutiaor_join_article(item,db)
-            work_type=(item['type'] if (item!=None and item!={}) else -1)
-            if (work_type==0):
-                item_article=fetchArticles(es,db,item,user_agent)
-                if item_article!=None and item_article!={}:
-                    item_article=to_es_body(item_article,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
-                    rcli.lpush('item_ES_list',item_article)
-            elif (work_type==1):
-                item_gallery = fetchGallerys(es,db, item,user_agent)
-                if item_gallery!=None and item_gallery!={}:
-                    item_gallery = to_es_body(item_gallery,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
-                    rcli.lpush('item_ES_list', item_gallery)
-            elif (work_type==2):
+            work_type=item['type'] if (item!=None and item!={}) else -1
+            print('work_type',work_type)
+            if work_type==0:
+                rep_resouce(es,db,item,rcli,user_agent)
+            elif work_type==2:
                 item_video = fetchVideos(es,db, item)
                 if item_video != None and item_video != {}:
                     item_video = to_es_body(item_video,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                     rcli.lpush('item_ES_list', item_video)
+                    #writer_fetch.listOfWorks_into_redis(item_video,pool)
             db.client.close()
             print('The resources is stored in the cache queue, waiting to be pushed into the Elasticsearch!')
         except:
