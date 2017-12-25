@@ -40,19 +40,12 @@ def moreFetchEssay(rpool,es,db1,db2,user_agents):
 def workingThread(rpool,es,db1,db2,user_agents):
     t1=threading.Thread(target=moreWriterFetch,args=(rpool, db1,db2,user_agents))
     t2 = threading.Thread(target=moreFetchEssay, args=(rpool,es, db1,db2,user_agents))
-    t3=threading.Thread(target=dynamic_fetch.parse_dyList, args=(rpool,user_agents))
-    t4=threading.Thread(target=dynamic_fetch.parse_dyList, args=(rpool,user_agents))
-    t5=threading.Thread(target=dynamic_fetch.parse_dyList, args=(rpool,user_agents))
-    t6=threading.Thread(target=dynamic_fetch.parse_dyList, args=(rpool,user_agents))
-    #t3=threading.Thread(target=check_start, args=(rpool,))
-    #t4 = threading.Thread(target=check_ball, args=(rpool,))
-    t1.start()
-    t3.start()
-    t2.start()
-    
-    t4.start()
-    t5.start()
-    #t6.start()
+    thread_list = []
+    for i in range(3):
+        t=threading.Thread(target=dynamic_fetch.parse_dyList, args=(rpool,user_agents))
+        thread_list.append(t)
+    for th in thread_list:
+        th.start()
 
 def check_start(pool):
     rcli = redis.StrictRedis(connection_pool=pool)

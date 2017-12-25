@@ -112,7 +112,7 @@ def check_time(behot_time,pool,uid):
             return 0
     else:
         #can_fech_time=(time.time())-(1*24*60*60)
-        can_fech_time=time.mktime(time.strptime('2017-07-15',"%Y-%m-%d"))
+        can_fech_time=time.mktime(time.strptime('2017-01-01',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
             return 1
         else:
