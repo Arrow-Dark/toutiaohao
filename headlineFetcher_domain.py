@@ -40,6 +40,8 @@ def moreFetchEssay(rpool,es,db1,db2,user_agents):
 def workingThread(rpool,es,db1,db2,user_agents):
     t1=threading.Thread(target=moreWriterFetch,args=(rpool, db1,db2,user_agents))
     t2 = threading.Thread(target=moreFetchEssay, args=(rpool,es, db1,db2,user_agents))
+    t1.start()
+    t2.start()
     thread_list = []
     for i in range(3):
         t=threading.Thread(target=dynamic_fetch.parse_dyList, args=(rpool,user_agents))
