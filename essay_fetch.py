@@ -97,7 +97,7 @@ def rep_resouce(es,db,item,rcli,user_agent):
                         item_gallery = to_es_body(item_gallery,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                         rcli.lpush('item_ES_list', item_gallery)
             elif re.match(r'^https://temai.snssdk.com/.*$', res.url):
-                item_other = fetchVideos(es,db,item,html)
+                item_other = fetchOthers(es,db,item,html)
                 if item_other != None and item_other != {}:
                     item_other = to_es_body(item_other,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                     rcli.lpush('item_ES_list', item_other)
@@ -381,6 +381,8 @@ def fetch_working(pool,es,db1,db2,userAgents):
                     item_video = to_es_body(item_video,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                     rcli.lpush('item_ES_list', item_video)
                     #writer_fetch.listOfWorks_into_redis(item_video,pool)
+            elif work_type==-1:
+                rcli.rpush('item_AGV_list',)
             db.client.close()
             print('The resources is stored in the cache queue, waiting to be pushed into the Elasticsearch!')
         except:
