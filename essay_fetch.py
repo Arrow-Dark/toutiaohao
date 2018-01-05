@@ -77,9 +77,7 @@ def rep_resouce(es,db,item,rcli,user_agent):
             info_gal = {}
             item_id = item['item_id']
             uid = item['uid']
-            
-            logo=random.choice(['a','i'])
-            source_url = 'http://www.toutiao.com/'+logo+str(item_id)+'/'
+            source_url = 'http://www.toutiao.com/i'+str(item_id)+'/'
             try:
                 res = requests.get(source_url,headers=heads, timeout=15)
             except requests.exceptions.Timeout:
