@@ -96,15 +96,19 @@ def rep_resouce(es,db,item,rcli,user_agent):
                     if item_gallery!=None and item_gallery!={} and len(item_gallery['images']):
                         item_gallery = to_es_body(item_gallery,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                         rcli.lpush('item_ES_list', item_gallery)
-            elif re.match(r'^https://temai.snssdk.com/.*$', res.url):
+            elif re.match(r'^http.://temai.snssdk.com/.*$', res.url):
                 item_other = fetchOthers(es,db,item,html)
                 if item_other != None and item_other != {}:
                     item_other = to_es_body(item_other,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                     rcli.lpush('item_ES_list', item_other)
-            else:
+            elif re.match(r'^.*://.*toutiao.com/.*$', res.url):
                 rcli.lpush('item_AGV_list',item)
+            else:
+                db.err_item.update({'_id':item_id},item,True)
+                #rcli.lpush('item_AGV_list',item)
     except:
         rcli.lpush('item_AGV_list',item)
+        #db.err_item.update({'_id':item_id},item,True)
         traceback.print_exc()
     
 
