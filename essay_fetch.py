@@ -77,7 +77,9 @@ def rep_resouce(es,db,item,rcli,user_agent):
             info_gal = {}
             item_id = item['item_id']
             uid = item['uid']
-            source_url = 'http://www.toutiao.com/i' + str(item_id)+'/'
+            
+            logo=random.choice(['a','i'])
+            source_url = 'http://www.toutiao.com/'+logo+str(item_id)+'/'
             try:
                 res = requests.get(source_url,headers=heads, timeout=15)
             except requests.exceptions.Timeout:
@@ -101,12 +103,11 @@ def rep_resouce(es,db,item,rcli,user_agent):
                 if item_other != None and item_other != {}:
                     item_other = to_es_body(item_other,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                     rcli.lpush('item_ES_list', item_other)
-            elif re.match(r'^.*://.*toutiao.com/.*$', res.url):
-                rcli.lpush('item_AGV_list',item)
             else:
-                db.err_item.update({'_id':item_id},item,True)
-                #rcli.lpush('item_AGV_list',item)
+                item['flag']+=1
+                rcli.lpush('item_AGV_list',item)
     except:
+        item['flag']+=1
         rcli.lpush('item_AGV_list',item)
         #db.err_item.update({'_id':item_id},item,True)
         traceback.print_exc()
@@ -373,6 +374,13 @@ def fetch_working(pool,es,db1,db2,userAgents):
             user_agent = random.choice(userAgents)
             
             item=eval(rcli.brpop('item_AGV_list')[1].decode())
+            flag=item['flag'] if 'flag' in item.keys() else 0
+            if flag>5:
+                db.err_item.update({'_id':item_id},item,True)
+                print('err_item goto mongo!')
+                continue
+            else:
+                item['flag']=flag
             #item=eval(rcli.brpoplpush('item_AGV_list','item_AGV_list_bck',0).decode())
             item=toutiaor_join_article(item,db)
             work_type=item['type'] if (item!=None and item!={}) else -1
