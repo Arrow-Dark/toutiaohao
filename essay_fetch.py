@@ -86,6 +86,7 @@ def rep_resouce(es,db,item,rcli,user_agent):
             if re.match(r'^.*://.*toutiao.com/.*$', res.url) and res.status_code==200:
                 _type=check_type(html)
                 item['type']=_type
+                print('item_type',_type)
                 if _type==0:
                     item_article=fetchArticles(es,db,item,html)
                     if item_article!=None and item_article!={} and item_article['content']!='':
@@ -96,6 +97,9 @@ def rep_resouce(es,db,item,rcli,user_agent):
                     if item_gallery!=None and item_gallery!={} and len(item_gallery['images']):
                         item_gallery = to_es_body(item_gallery,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                         rcli.lpush('item_ES_list', item_gallery)
+                else:
+                    item['type']=0
+                    rcli.rpush('item_AGV_list',item)
             elif re.match(r'^http.://temai.snssdk.com/.*$', res.url):
                 item_other = fetchOthers(es,db,item,html)
                 if item_other != None and item_other != {}:
@@ -126,8 +130,7 @@ def fetchGallerys(es,db,gallery,html):
             info=''
             for i in user_info:
                 if re.match(r'^.*gallery:.*JSON.parse.*$', i):
-                    info =i
-                    info.strip()
+                    info = i.strip()
                     break
             #print(type(info))
             if info!='':
@@ -203,30 +206,28 @@ def fetchArticles(es,db,article,html):
                 tags=tags[0].replace(' ','') if len(tags) else None
                 tag_list=eval(tags[tags.index('['):-1]) if tags else []
                 labels=list(y[0] for y in (list(x.values()) for x in tag_list))
-
-                article_content='\n'.join(article_content)
-                info_gal['content'] = article_content
-                info_gal['images'] = article_imgs
-                
-                info_gal['labels'] = labels
-                info_gal['title'] = article['title']
-                info_gal['duration'] = article['duration']
-                info_gal['read_count'] = article['read_count']
-                info_gal['comments_count'] = article['comments_count']
-                info_gal['up_count'] = article['up_count']
-                info_gal['down_count'] = article['down_count']
-                info_gal['type'] = article['type']
-                info_gal['published_at'] = int(article['behot_time']*1000)
-                info_gal['toutiaor_id'] = uid
-                info_gal['_id'] = item_id
-                info_gal['crawled_at'] = int(time.time()*1000)
-                info_gal['avatar_img'] = article['avatar_img']
-                info_gal['name'] = article['name']
-                info_gal['introduction'] = article['introduction']
-                info_gal['follower_count'] = article['follower_count']
-                info_gal['fans_count'] = article['fans_count']
-                print(item_id, 'This article has been parsed')
-                return info_gal
+            article_content='\n'.join(article_content)
+            info_gal['content'] = article_content
+            info_gal['images'] = article_imgs
+            info_gal['labels'] = labels
+            info_gal['title'] = article['title']
+            info_gal['duration'] = article['duration']
+            info_gal['read_count'] = article['read_count']
+            info_gal['comments_count'] = article['comments_count']
+            info_gal['up_count'] = article['up_count']
+            info_gal['down_count'] = article['down_count']
+            info_gal['type'] = article['type']
+            info_gal['published_at'] = int(article['behot_time']*1000)
+            info_gal['toutiaor_id'] = uid
+            info_gal['_id'] = item_id
+            info_gal['crawled_at'] = int(time.time()*1000)
+            info_gal['avatar_img'] = article['avatar_img']
+            info_gal['name'] = article['name']
+            info_gal['introduction'] = article['introduction']
+            info_gal['follower_count'] = article['follower_count']
+            info_gal['fans_count'] = article['fans_count']
+            print(item_id, 'This article has been parsed')
+            return info_gal
     except:
         traceback.print_exc()
 
@@ -392,7 +393,7 @@ def fetch_working(pool,es,db1,db2,userAgents):
                     rcli.lpush('item_ES_list', item_video)
                     #writer_fetch.listOfWorks_into_redis(item_video,pool)
             elif work_type==-1:
-                rcli.rpush('item_AGV_list',)
+                rcli.rpush('item_AGV_list',item)
             db.client.close()
             print('The resources is stored in the cache queue, waiting to be pushed into the Elasticsearch!')
         except:
@@ -407,10 +408,10 @@ def fetch_essay(pool,es,db1,db2,userAgents):
         t2 = threading.Thread(target=item_to_es, args=(pool,))
         t1.start()
         t2.start()
-        t1.join()
-        t2.join()
         t3.start()
         t4.start()
+        t1.join()
+        t2.join()
         t3.join()
         t4.join()
     except:
