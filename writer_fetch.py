@@ -446,6 +446,13 @@ def headlineIds(pool,db1,db2,userAgents):
     #while True:
     while True:
         try:
+            if rcli.info('memory')['used_memory'] > (700*1024*1024):
+                while 1:
+                    if rcli.info('memory')['used_memory'] < (200*1024*1024):
+                        break
+                    else:
+                        time.sleep(900)
+                        continue
             # if db1.client.is_primary :
             #     db=db1
             #     db2.client.close()
@@ -488,6 +495,7 @@ def headlineIds(pool,db1,db2,userAgents):
                 #listOfWorks_thread.join()
                 #perk_item_thread.join()
                 dy_thread.join()
+                listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)
                 '''
                 if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
                     dy_list_thread = threading.Thread(target=listOfWorks_into_redis, args=(dy_list, pool))

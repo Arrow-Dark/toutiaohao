@@ -151,5 +151,5 @@ def perk_item(listOfWorks,pool):
     t_videos.start()
     t_articles.join()
     t_videos.join()
-    writer_fetch.listOfWorks_into_redis(listOfWorks,pool)
+    #writer_fetch.listOfWorks_into_redis(listOfWorks,pool)
     print('The list of articles is sorted, and the queue of articles waits to be resolved!')
