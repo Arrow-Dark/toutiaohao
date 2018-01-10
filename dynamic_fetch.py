@@ -23,6 +23,7 @@ def parse_jsonp(jsonp_str):
 
 
 def put2es(item,pool,db):
+    rcli = redis.StrictRedis(connection_pool=pool)
     index_name='toutiao_articles_and_users'
     type_name='toutiao_articles_and_users'
 
