@@ -33,7 +33,7 @@ def put2es(item,pool,db):
     info_action['index_name']= index_name
     info_action['type_name']= type_name
     info_action['toutiaor_id']= uid
-    info_action['id']=raw['item_id_str'] if 'item_id_str' in x else x['id_str']
+    info_action['id']=raw['item_id_str'] if 'item_id_str' in raw else raw['id_str']
     info_action['title']= raw['group']['title'] if 'title' in raw['group'].keys() else raw['title'] if 'title' in raw.keys() else raw['content']
     info_action['content']= raw['content']
     info_action['images']=[]
