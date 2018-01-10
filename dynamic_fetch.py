@@ -101,7 +101,6 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                             except KeyError:
                                 continue
                             behot_time=x['create_time']
-                            print('create_time:',time.strftime("%Y-%m-%d",time.localtime(behot_time)))
                             #is_exist=False if item_id in items_id else True
                             is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                             #print('is_again_working',is_again_working)
