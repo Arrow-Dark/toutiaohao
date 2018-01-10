@@ -315,7 +315,7 @@ def item_to_es(pool):
     headers={'Content-Type':'application/json'}
     while True:
         try:
-            if rcli.llen('item_ES_list')>=1000:#1000
+            if rcli.llen('item_ES_list')>=0:#1000
                 while rcli.llen('item_ES_list')>0:
                     _item=rcli.rpop('item_ES_list')
                     if _item!=None:
@@ -338,7 +338,7 @@ def item_to_es(pool):
                 print(str(len(articles_to_es)) + 'articles pushed into Elasticsearch')
                 del articles_to_es[0:len(articles_to_es)]
             traceback.print_exc()
-        time.sleep(2)
+        time.sleep(20)
 
 def toutiaor_join_article(item,db):
     try:
