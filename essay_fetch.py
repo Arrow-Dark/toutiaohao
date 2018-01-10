@@ -379,7 +379,7 @@ def fetch_working(pool,es,db1,db2,userAgents):
             #print(item.keys())
             flag=item['flag'] if 'flag' in item.keys() else 0
             if flag>5:
-                db.err_item.update({'_id':item_id},item,True)
+                db.err_item.update({'_id':item['item_id']},item,True)
                 print('err_item goto mongo!')
                 continue
             else:
