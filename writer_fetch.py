@@ -397,12 +397,12 @@ def headlineIds(pool,db1,db2,userAgents):
     #while True:
     while True:
         try:
-            # if db1.client.is_primary :
-            #     db=db1
-            #     db2.client.close()
-            # elif db2.client.is_primary :
-            #     db = db2
-            #     db1.client.close()
+            if db1.client.is_primary :
+                db=db1
+                db2.client.close()
+            elif db2.client.is_primary :
+                db = db2
+                db1.client.close()
             #toutiaors_conn = db.toutiaors
             user_agent=random.choice(userAgents)
             uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list',0).decode()
@@ -416,7 +416,7 @@ def headlineIds(pool,db1,db2,userAgents):
                 '''   
  
                 items_id=[]
-                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id))
+                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id,db))
                 dy_thread.start()
                 dy_thread.join()
                 listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)

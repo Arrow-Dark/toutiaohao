@@ -22,6 +22,42 @@ def parse_jsonp(jsonp_str):
         raise ValueError('Invalid JSONP')
 
 
+def put2es(item,pool,db):
+    index_name='toutiao_articles_and_users'
+    type_name='toutiao_articles_and_users'
+
+    uid=item['uid']
+    toutiaor=db.toutiaors.find_one({'_id':uid})
+    raw=item['original_data']
+    info_action = {}
+    info_action['index_name']= index_name
+    info_action['type_name']= type_name
+    info_action['toutiaor_id']= uid
+    info_action['id']=raw['item_id_str'] if 'item_id_str' in x else x['id_str']
+    info_action['title']= raw['group']['title'] if 'title' in raw['group'].keys() else raw['title'] if 'title' in raw.keys() else raw['content']
+    info_action['content']= raw['content']
+    info_action['images']=[]
+    info_action['labels']= []
+    info_action['read_count']=raw['read_count']
+    info_action['comment_count']=raw['comment_count']
+    info_action['up_count']= raw['digg_count']
+    info_action['down_count']=0
+    info_action['published_at']= raw['create_time']*1000
+    info_action['crawled_at']=int(time.time()*1000)
+    info_action['type']= raw['group']['media_type'] if 'media_type' in raw['group'].keys() else 0
+    info_action['duration']= 0
+    info_action['avatar_img']=raw['user']['avatar_url']
+    info_action['name']=raw['user']['screen_name']
+    info_action['introduction']=toutiaor['introduction']
+    info_action['follower_count']=toutiaor['follower_count'] if toutiaor else 0
+    info_action['fans_count']=toutiaor['fans_count'] if toutiaor else 0
+    info_action['is_finish']='false'
+    rcli.lpush('item_ES_list', info_action)
+
+
+    
+
+
 def parse_dy(datas,user_agent):
     _datas=[]
     for data in datas:
@@ -105,6 +141,7 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                             is_again_working =writer_fetch.check_time(behot_time,pool,uid)
                             #print('is_again_working',is_again_working)
                             if is_again_working:# and is_exist:
+                                put2es({'uid':uid,'original_data':x},pool,db)
                                 rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                 con+=1
                             else:

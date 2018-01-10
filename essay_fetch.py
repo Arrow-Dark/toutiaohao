@@ -42,6 +42,7 @@ def to_es_body(info_gal,index_name,type_name):
     info_action['introduction']=info_gal['introduction']
     info_action['follower_count']=info_gal['follower_count']
     info_action['fans_count']=info_gal['fans_count']
+    info_action['is_finish']='true'
     return info_action
 
 
