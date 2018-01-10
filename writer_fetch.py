@@ -106,6 +106,7 @@ def check_time(behot_time,pool,uid):
         item=eval(rcli.hget('item_AGV_hash',uid).decode())
         crawled_at=item['crawled_at']
         can_fech_time=crawled_at-(7*24*60*60)
+        #print(time.strftime("%Y-%m-%d",time.localtime(can_fech_time)))
         #can_fech_time=time.mktime(time.strptime('2017-10-28',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
             return 1
@@ -113,7 +114,8 @@ def check_time(behot_time,pool,uid):
             return 0
     else:
         #can_fech_time=(time.time())-(1*24*60*60)
-        can_fech_time=time.mktime(time.strptime('2017-01-01',"%Y-%m-%d"))
+        can_fech_time=time.mktime(time.strptime('2017-09-01',"%Y-%m-%d"))
+        #print(time.strftime("%Y-%m-%d",time.localtime(behot_time)))
         if behot_time>=can_fech_time:
             return 1
         else:
@@ -173,6 +175,7 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
         device_id=id_dict['device_id']
     if 'device_platform' in id_dict.keys() and id_dict['device_platform']!='':
         device_platform=id_dict['device_platform']
+
     for data in datas:   
         #print('json_analyze',data)    
         behot_time=data['behot_time']
@@ -181,74 +184,22 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
         # if not is_again_working:
         #     continue
         genre = data['article_genre']
-        if genre == 'article' and ('video_duration_str' not in data.keys()):
-            url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
-            print('Start grabbing phone information')
-            try:
-                #res = requests.get(url, timeout=30)
-                req=urllib.request.Request(url,headers=headers)
-                res=urllib.request.urlopen(req)
-            except requests.exceptions.Timeout:
-                #res = requests.get(url, timeout=30)
-                req=urllib.request.Request(url,headers=headers)
-                res=urllib.request.urlopen(req)
-            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.geturl()):
-                text=res.read().decode('utf-8')
-                _dict=json_po(text)
-                #_dict=json_po(res.content.decode('utf-8'))
-                print('The mobile phone information grabs the end')
-                article_dict=check_phone(_dict)
-                like_count = 0
-                if 'digg_count' in article_dict.keys():
-                    like_count = article_dict['digg_count']
-                elif 'like_count' in article_dict.keys():
-                    like_count = article_dict['like_count']
-                article = {
-                    'group_id': data['group_id'],
-                    'item_id': data['item_id'],
-                    'title':data['title'],
-                    'go_detail_count': data['go_detail_count'],
-                    'comments_count': data['comments_count'],
-                    'like_count':like_count,
-                    'behot_time': data['behot_time'],
-                    'article_genre':genre
-                }
-                articles.append(article)
-        elif genre == 'gallery' and ('video_duration_str' not in data.keys()):
-            url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
-            print('Start grabbing phone information')
-            try:
-                #res = requests.get(url, timeout=30)
-                req=urllib.request.Request(url,headers=headers)
-                res=urllib.request.urlopen(req)
-            except requests.exceptions.Timeout:
-                #res = requests.get(url, timeout=30)
-                req=urllib.request.Request(url,headers=headers)
-                res=urllib.request.urlopen(req)
-            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.geturl()):
-                text=res.read().decode('utf-8')
-                _dict=json_po(text)
-                #_dict = json.loads(res.read().decode('utf-8'))
-                #_dict=json_po(res.content.decode('utf-8'))
-                print('The mobile phone information grabs the end')
-                gallery_dict = check_phone(_dict)
-                like_count = 0
-                if 'digg_count' in gallery_dict.keys():
-                    like_count = gallery_dict['like_count']
-                elif 'like_count' in gallery_dict.keys():
-                    like_count = gallery_dict['like_count']
-                gallery = {
-                    'group_id': data['group_id'],
-                    'item_id': data['item_id'],
-                    'title': data['title'],
-                    'go_detail_count': data['go_detail_count'],
-                    'comments_count': data['comments_count'],
-                    'like_count': like_count,
-                    'article_genre': genre,
-                    'behot_time': data['behot_time']
-                }
-                galleries.append(gallery)
-        elif (genre == 'video' and ('video_duration_str' in data.keys())) or ('video_duration_str' in data.keys()):
+        if genre == 'article':
+            
+            article = {
+                'group_id': data['group_id'],
+                'item_id': data['item_id'],
+                'title':data['title'],
+                'go_detail_count': data['go_detail_count'],
+                'comments_count': data['comments_count'],
+                #'like_count':like_count if ,
+                'like_count':data['like_count'],
+                'behot_time': data['behot_time'],
+                'article_genre':genre
+            }
+            
+            articles.append(article)
+        elif (genre == 'video'):
             url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
             print('Start grabbing phone information')
             try:
@@ -259,7 +210,7 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
                 #res = requests.get(url, timeout=30)
                 req=urllib.request.Request(url,headers=headers)
                 res=urllib.request.urlopen(req)
-            if re.match(r'^https://is.snssdk.com/2/article/information/.*$', res.geturl()):
+            if re.match(r'^http.*://is.snssdk.com/2/article/information/.*$', res.geturl()):
                 #_dict = json.loads(res.content.decode('utf-8'))
                 print(url==res.geturl())
                 text=res.read().decode('utf-8')
@@ -286,7 +237,7 @@ def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
                     'video_duration_str': second_duration,
                     'detail_play_effective_count': data['detail_play_effective_count'],
                     'comments_count': data['comments_count'],
-                    'digg_count': digg_count,
+                    'digg_count': data['like_count'] if 'like_count' in data.keys() else video_dict['digg_count'] if 'digg_count' in video_dict.keys() else video_dict['like_count'] if 'like_count' in video_dict.keys() else 0,
                     'bury_count': bury_count,
                     'behot_time': data['behot_time'],
                     'article_genre': genre
@@ -446,13 +397,6 @@ def headlineIds(pool,db1,db2,userAgents):
     #while True:
     while True:
         try:
-            if rcli.info('memory')['used_memory'] > (700*1024*1024):
-                while 1:
-                    if rcli.info('memory')['used_memory'] < (200*1024*1024):
-                        break
-                    else:
-                        time.sleep(900)
-                        continue
             # if db1.client.is_primary :
             #     db=db1
             #     db2.client.close()
@@ -466,36 +410,17 @@ def headlineIds(pool,db1,db2,userAgents):
             #uid=uids.pop()
             print('Geted the user id_'+uid)
             if uid != None:
-                # if not toutiaors_conn.find_one({'_id': uid}):
-                #     wirterTitles = fetchWriterTitle(uid,user_agent)
-                #     if wirterTitles != None and wirterTitles['_id'] == uid:
-                #         wirterTitles_into_mongo(wirterTitles, db)
-                #         print(wirterTitles)
                 '''
                 #check_be=toutiaors_conn.find_one({'_id': uid})
                 # if check_be and check_be['fans_count']>=50:
                 '''   
-                         
-                # listOfWorks=fetchContent(uid, pool, user_agent)
-                # print('listOfWorks',listOfWorks)
-                #if listOfWorks['_id'] == uid and (listOfWorks['articles']!=[] or listOfWorks['galleries']!=[] or listOfWorks['videos']!=[]):
-                # if listOfWorks['_id'] == uid :
-                #     #listOfWorks_thread = threading.Thread(target=listOfWorks_into_redis, args=(listOfWorks, pool))
-                #     items_=listOfWorks['articles']+listOfWorks['galleries']+listOfWorks['videos']
-                #     items_id=[]
-                #     for x in items_:
-                #         if 'item_id' in x.keys():
-                #             items_id.append(x['item_id'])
+ 
                 items_id=[]
                 dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id))
                 dy_thread.start()
-                #listOfWorks_thread.start()
-                #perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(listOfWorks, pool))
-                #perk_item_thread.start()
-                #listOfWorks_thread.join()
-                #perk_item_thread.join()
                 dy_thread.join()
                 listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)
+                break
                 '''
                 if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
                     dy_list_thread = threading.Thread(target=listOfWorks_into_redis, args=(dy_list, pool))
@@ -505,6 +430,6 @@ def headlineIds(pool,db1,db2,userAgents):
                     dy_list_thread.join()
                     perk_item_thread.join()
                 '''
-            time.sleep(8)
+            time.sleep(5)
         except:
             traceback.print_exc()

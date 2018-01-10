@@ -26,20 +26,13 @@ def parse_dy(datas,user_agent):
     _datas=[]
     for data in datas:
         behot_time=data['create_time']
-        if not ('group_id' in data['group'].keys() or 'group_id' in data.keys()):
-            continue
-        try:
-            group_id=str(data['group']['group_id'])
-        except KeyError:
-            group_id = str(data['group_id'])
-        try:
-            item_id = str(data['group']['item_id'])
-        except KeyError:
-            item_id = str(data['item_id'])
-        try:
-            title = data['group']['title']
-        except KeyError:
-            title = data['title']
+        # if not ('group_id' in data['group'].keys() or 'group_id' in data.keys()):
+        #     continue
+        group_id=str(data['group']['group_id']) if 'group_id' in data['group'].keys() else data['group_id'] if 'group_id' in data.keys() else data['id_str']
+        
+        item_id = data['item_id_str'] if 'item_id_str' in data else data['id_str']
+        
+        title = data['group']['title'] if 'title' in data['group'].keys() else data['title'] if 'title' in data.keys() else data['content']
         img_url=''
         comments_count=data['comment_count']
         video_duration_str='0'
@@ -47,7 +40,7 @@ def parse_dy(datas,user_agent):
         detail_play_effective_count=data['read_count']
         go_detail_count=data['read_count']
         like_count=data['digg_count']
-        _type=data['group']['media_type']
+        _type=data['group']['media_type'] if 'media_type' in data['group'].keys() else 1
         article_genre = ''
         if _type==1:
             article_genre='article'
@@ -100,23 +93,27 @@ def fetch_dy_list(uid,pool,user_agent,items_id):
                 original_data=content['data']['data']
                 if len(original_data) != 0:
                     for x in original_data:
-                        if re.match(r'^http.*://toutiao.com/item/.*$',x['share_url']):
+                        if re.match(r'^http.//toutiao.com/i.*$',x['share_url']) or re.match(r'^http.//weitoutiao.zjurl.cn/.*$',x['share_url']):
+                        #if not re.match(r'^http.*//toutiao.com/dongtai.*$',x['share_url']):
+                            #print(x['share_url'])
                             try:
-                                item_id = x['item_id_str']
+                                item_id = x['item_id_str'] if 'item_id_str' in x else x['id_str']
                             except KeyError:
                                 continue
                             behot_time=x['create_time']
+                            print('create_time:',time.strftime("%Y-%m-%d",time.localtime(behot_time)))
                             #is_exist=False if item_id in items_id else True
                             is_again_working =writer_fetch.check_time(behot_time,pool,uid)
+                            #print('is_again_working',is_again_working)
                             if is_again_working:# and is_exist:
-                                rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]}) 
+                                rcli.sadd('toutiao_dynamic_original_data',{'uid':uid,'original_data':[x]})
                                 con+=1
                             else:
                                 has_more=False
                                 break
                     print(uid,con,'page:',json_num)
                 if not has_more:
-                    print(uid + '_Dynamic overtime has stopped fetching')
+                    #print(uid + '_Dynamic overtime has stopped fetching')
                     return
             else:
                 has_more =False
@@ -138,6 +135,7 @@ def  parse_dyList(pool,user_agents):
             user_agent=random.choice(user_agents)
             _data=rcli.spop('toutiao_dynamic_original_data')
             if not _data:
+                time.sleep(3)
                 continue
             _data=eval(_data.decode('utf-8'))
             uid=_data['uid']
@@ -150,9 +148,10 @@ def  parse_dyList(pool,user_agents):
             resources_num['videos'] = videos
             resources_num['others'] = others
             resources_num['crawled_at'] = time.time()
+
             perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(resources_num, pool))
             perk_item_thread.start()
             perk_item_thread.join()
-            print('Dynamic separation!')
+            #print('Dynamic separation!')
         except:
             traceback.print_exc()

@@ -18,6 +18,7 @@ from elasticsearch import helpers
 import writer_fetch
 
 
+
 def to_es_body(info_gal,index_name,type_name):
     info_action = {}
     info_action['index_name']= index_name
@@ -89,7 +90,9 @@ def rep_resouce(es,db,item,rcli,user_agent):
                 print('item_type',_type)
                 if _type==0:
                     item_article=fetchArticles(es,db,item,html)
+                    
                     if item_article!=None and item_article!={} and item_article['content']!='':
+                    #if item_article!=None:
                         item_article=to_es_body(item_article,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                         rcli.lpush('item_ES_list',item_article)
                 elif _type==1:
@@ -113,7 +116,6 @@ def rep_resouce(es,db,item,rcli,user_agent):
         rcli.lpush('item_AGV_list',item)
         #db.err_item.update({'_id':item_id},item,True)
         traceback.print_exc()
-    
 
 def fetchGallerys(es,db,gallery,html):
     try:
@@ -198,17 +200,18 @@ def fetchArticles(es,db,article,html):
                 _text=scri[0][scri[0].index('{'):-1] if len(scri) else ''
                 con=list(x for x in _text.split('\n') if re.match(r'^.*content:.*',x))
                 _str=con[0].replace(' ','').replace('&lt;p','').replace('&lt','').replace(';/p','').replace('&quot','').replace('&gt','').replace('imgsrc&#x3D','')
-                article_content=list(x for x in _str.split(';') if re.match('^[\u4e00-\u9fa5]',x))
+                article_content=list(x for x in _str.split(';') if re.match('^[\u4e00-\u9fa5]',x)) if not re.match(r'^1\d+$',item_id) else list(x for x in _str.split(';'))
                 article_imgs=list(x for x in _str.split(';') if re.match('^http.*',x))
-
                 tags=list(x for x in _text.split('\n') if re.match(r'^.*tags:.*',x))
                 _str=con[0].replace(' ','').replace('&lt;p','').replace('&lt','').replace(';/p','').replace('&quot','').replace('&gt','').replace('imgsrc&#x3D','') if len(con) else ''
                 tags=tags[0].replace(' ','') if len(tags) else None
                 tag_list=eval(tags[tags.index('['):-1]) if tags else []
                 labels=list(y[0] for y in (list(x.values()) for x in tag_list))
+
             article_content='\n'.join(article_content)
             info_gal['content'] = article_content
             info_gal['images'] = article_imgs
+            
             info_gal['labels'] = labels
             info_gal['title'] = article['title']
             info_gal['duration'] = article['duration']
@@ -311,13 +314,13 @@ def item_to_es(pool):
     headers={'Content-Type':'application/json'}
     while True:
         try:
-            if rcli.llen('item_ES_list')>=500:#1000
+            if rcli.llen('item_ES_list')>=0:#1000
                 while rcli.llen('item_ES_list')>0:
                     _item=rcli.rpop('item_ES_list')
                     if _item!=None:
                         item = eval(_item.decode())
                         articles_to_es.append(item)
-                    if len(articles_to_es)>=250:
+                    if len(articles_to_es)>=0:
                         #helpers.bulk(es, articles_to_es, index='toutiao_articles_and_users', raise_on_error=True)
                         requests.post('http://59.110.52.213/stq/api/v1/pa/toutiao/add',headers=headers,data=json.dumps(articles_to_es))
                         print(str(len(articles_to_es))+'articles pushed into Elasticsearch')
@@ -373,6 +376,7 @@ def fetch_working(pool,es,db1,db2,userAgents):
             user_agent = random.choice(userAgents)
             
             item=eval(rcli.brpop('item_AGV_list')[1].decode())
+            #print(item.keys())
             flag=item['flag'] if 'flag' in item.keys() else 0
             if flag>5:
                 db.err_item.update({'_id':item_id},item,True)
@@ -383,12 +387,14 @@ def fetch_working(pool,es,db1,db2,userAgents):
             #item=eval(rcli.brpoplpush('item_AGV_list','item_AGV_list_bck',0).decode())
             item=toutiaor_join_article(item,db)
             work_type=item['type'] if (item!=None and item!={}) else -1
-            print('work_type',work_type)
+            #print('work_type',work_type)
+            
             if work_type==0:
                 rep_resouce(es,db,item,rcli,user_agent)
             elif work_type==2:
                 item_video = fetchVideos(es,db, item)
                 if item_video != None and item_video != {}:
+                    print('item_type',work_type)
                     item_video = to_es_body(item_video,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                     rcli.lpush('item_ES_list', item_video)
                     #writer_fetch.listOfWorks_into_redis(item_video,pool)
@@ -407,13 +413,13 @@ def fetch_essay(pool,es,db1,db2,userAgents):
         t4=threading.Thread(target=fetch_working,args=(pool,es,db1,db2,userAgents))
         t2 = threading.Thread(target=item_to_es, args=(pool,))
         t1.start()
-        t2.start()
+        #t2.start()
         t3.start()
         t4.start()
-        t1.join()
-        t2.join()
-        t3.join()
-        t4.join()
+        #t1.join()
+        #t2.join()
+        # t3.join()
+        # t4.join()
     except:
         traceback.print_exc()
 
