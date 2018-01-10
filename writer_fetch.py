@@ -420,7 +420,6 @@ def headlineIds(pool,db1,db2,userAgents):
                 dy_thread.start()
                 dy_thread.join()
                 listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)
-                break
                 '''
                 if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
                     dy_list_thread = threading.Thread(target=listOfWorks_into_redis, args=(dy_list, pool))
