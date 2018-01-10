@@ -102,7 +102,7 @@ def parse_dy(datas,user_agent):
             _datas.append(_data)
     return _datas
 
-def fetch_dy_list(uid,pool,user_agent,items_id):
+def fetch_dy_list(uid,pool,user_agent,items_id,db):
     print(uid,'start fetch_dy_list!')
     heads={}
     heads['User-Agent']=user_agent
