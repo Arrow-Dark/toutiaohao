@@ -209,7 +209,7 @@ def fetchArticles(es,db,article,html):
                 tag_list=eval(tags[tags.index('['):-1]) if tags else []
                 labels=list(y[0] for y in (list(x.values()) for x in tag_list))
 
-            article_content='\n'.join(article_content)
+            article_content=('\n'.join(article_content)).replace("content:'",'')
             info_gal['content'] = article_content
             info_gal['images'] = article_imgs
             
@@ -315,13 +315,13 @@ def item_to_es(pool):
     headers={'Content-Type':'application/json'}
     while True:
         try:
-            if rcli.llen('item_ES_list')>=0:#1000
+            if rcli.llen('item_ES_list')>=1000:
                 while rcli.llen('item_ES_list')>0:
                     _item=rcli.rpop('item_ES_list')
                     if _item!=None:
                         item = eval(_item.decode())
                         articles_to_es.append(item)
-                    if len(articles_to_es)>=0:
+                    if len(articles_to_es)>=200:
                         #helpers.bulk(es, articles_to_es, index='toutiao_articles_and_users', raise_on_error=True)
                         requests.post('http://59.110.52.213/stq/api/v1/pa/toutiao/add',headers=headers,data=json.dumps(articles_to_es))
                         print(str(len(articles_to_es))+'articles pushed into Elasticsearch')

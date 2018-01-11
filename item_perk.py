@@ -31,33 +31,33 @@ def perkArticles(uid,articles,pool):
     except:
         traceback.print_exc()
 
-def perkGallerys(uid,galleries,pool):
-    try:
-        rcli = redis.StrictRedis(connection_pool=pool)
-        if len(galleries):
-            for gallery in galleries:
-                if len(gallery.keys()):
-                    go_detail_count=0
-                    like_count=0
-                    if 'go_detail_count' in gallery.keys():
-                        go_detail_count=gallery['go_detail_count']
-                    if 'like_count' in gallery.keys():
-                        go_detail_count=gallery['like_count']
-                    item = {
-                        'uid': uid,
-                        'item_id': gallery['item_id'],
-                        'title': gallery['title'],
-                        'duration': 0,
-                        'read_count': go_detail_count,
-                        'comments_count': gallery['comments_count'],
-                        'up_count': like_count,
-                        'down_count':0,
-                        'behot_time': gallery['behot_time']
-                    }
-                    item['type'] = 1
-                    rcli.lpush('item_AGV_list', item)
-    except:
-        traceback.print_exc()
+# def perkGallerys(uid,galleries,pool):
+#     try:
+#         rcli = redis.StrictRedis(connection_pool=pool)
+#         if len(galleries):
+#             for gallery in galleries:
+#                 if len(gallery.keys()):
+#                     go_detail_count=0
+#                     like_count=0
+#                     if 'go_detail_count' in gallery.keys():
+#                         go_detail_count=gallery['go_detail_count']
+#                     if 'like_count' in gallery.keys():
+#                         go_detail_count=gallery['like_count']
+#                     item = {
+#                         'uid': uid,
+#                         'item_id': gallery['item_id'],
+#                         'title': gallery['title'],
+#                         'duration': 0,
+#                         'read_count': go_detail_count,
+#                         'comments_count': gallery['comments_count'],
+#                         'up_count': like_count,
+#                         'down_count':0,
+#                         'behot_time': gallery['behot_time']
+#                     }
+#                     item['type'] = 1
+#                     rcli.lpush('item_AGV_list', item)
+#     except:
+#         traceback.print_exc()
 
 def perkVideos(uid,videos,pool):
     try:
@@ -82,27 +82,27 @@ def perkVideos(uid,videos,pool):
     except:
         traceback.print_exc()
 
-def perkOthers(uid,others,pool):
-    try:
-        rcli = redis.StrictRedis(connection_pool=pool)
-        if len(others):
-            for other in others:
-                if len(other.keys()):
-                    item = {
-                        'uid': uid,
-                        'item_id': other['item_id'],
-                        'title': other['title'],
-                        'duration': 0,
-                        'read_count': other['go_detail_count'],
-                        'comments_count': other['comments_count'],
-                        'up_count': other['like_count'],
-                        'down_count': 0,
-                        'behot_time': other['behot_time']
-                    }
-                    item['type'] = 3
-                    rcli.lpush('item_AGV_list', item)
-    except:
-        traceback.print_exc()
+# def perkOthers(uid,others,pool):
+#     try:
+#         rcli = redis.StrictRedis(connection_pool=pool)
+#         if len(others):
+#             for other in others:
+#                 if len(other.keys()):
+#                     item = {
+#                         'uid': uid,
+#                         'item_id': other['item_id'],
+#                         'title': other['title'],
+#                         'duration': 0,
+#                         'read_count': other['go_detail_count'],
+#                         'comments_count': other['comments_count'],
+#                         'up_count': other['like_count'],
+#                         'down_count': 0,
+#                         'behot_time': other['behot_time']
+#                     }
+#                     item['type'] = 3
+#                     rcli.lpush('item_AGV_list', item)
+#     except:
+#         traceback.print_exc()
 
 class perkArticlesThread(threading.Thread):
     def __init__(self,uid,articles,pool):

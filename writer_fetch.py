@@ -21,82 +21,35 @@ def fetchWriterTitle(uid,user_agent):
     try:
         heads={}
         heads['User-Agent'] = user_agent
-        avtar_img = ''
-        name = ''
-        abstract = ''
-        guanzhu = 0
-        fensi = 0
-        url_html = 'https://www.toutiao.com/c/user/' + str(uid) + '/'
+        url_html = 'http://m.toutiao.com/profile/{}/'.format(uid)
         #print(url_html)
         try:
-            #res = requests.get(url, timeout=30)
             req=urllib.request.Request(url_html,headers=heads)
-            res=urllib.request.urlopen(req)
-            # driver=Drivers.get_chrome(user_agent)
-            # driver.get(url_html)
-            # time.sleep(3)
+            res_u=urllib.request.urlopen(req)
+            res_r=None
         except requests.exceptions.Timeout:
-            #res = requests.get(url, timeout=30)
-            req=urllib.request.Request(url_html,headers=heads)
-            res=urllib.request.urlopen(req)
-        #print(res_html.status_code)
-        html=driver.page_source()
-        res.status=200
-        driver.quit()
-        if res.status==200:
-            #html=res_html.content.decode('utf-8')
-            #html=res.read().decode('utf-8')
+            res_u=None
+            res_r = requests.get(url_html,headers=heads,timeout=30)
+        if (res_u and res_u.getcode()==200) or (res_r and res_r.status==200):
+            html=res_u.read().decode('utf-8') if res_u else res_r.content().decode('utf-8')
             bs=BeautifulSoup(html,'html.parser')
-            #scripts=bs.find(attrs={"type": "text/javascript"})
-            scripts=bs.select_one('script[type="text/javascript"]')#[type="text/javascript"]
-            #print(scripts)
-            script_heads=scripts.text.replace('\n','').replace(' ','').split(';')
-            #print(script_heads)
-            #time.sleep(3)
-            script_statistics=scripts.find_next_sibling().find_next_sibling().text.replace('\n','').replace(' ','').split(';')
-            print(script_statistics)
-            for attr in script_heads:
-                attr=attr.strip()
-                if re.match('^.*header=.*$',attr):
-                    heads=attr.split('{')[1].split('}')[0].replace('\n','').replace(' ','').replace("'",'').split(',')
-                    for head in heads:
-                        head=head.strip()
-                        if re.match('^avtar_img:.*$',head):
-                            avtar_img='http:'+head.split(':')[-1]
-                        elif re.match('^name:.*$',head):
-                            name = head.split(':')[1]
-                        elif re.match('^abstract:.*$',head):
-                            abstract = head.split(':')[1]
-            for attr in script_statistics:
-                attr = attr.strip()
-                print(attr)
-                if re.match('^.*statistics.*$',attr):
-                    statistics=attr.split('{')[1].split('}')[0].replace('\n','').replace(' ','').replace("'",'').split(',')
-                    for statistic in statistics:
-                        statistic=statistic.strip()
-                        if re.match('^guanzhu:.*$',statistic):
-                            print(statistic)
-                            guanzhu=statistic.split(':')[1]
-                        elif re.match('^fensi:.*$',statistic):
-                            print(statistic)
-                            fensi = statistic.split(':')[1]
+            name=bs.select_one('#username').text if bs.select_one('#username') else ''
+            introduction=bs.select_one('#description').text if bs.select_one('#description') else ''
+            avatar_img=bs.select_one('#userlogo').get('src') if bs.select_one('#userlogo') else ''
+            followers=bs.select_one('#followingnum').get('data-num') if bs.select_one('#followingnum') else 0
+            fans=bs.select_one('#followernum').get('data-num') if bs.select_one('#followernum') else 0
             toutiaors = {
             '_id':uid,
-            'avatar_img': avtar_img,
+            'avatar_img': avatar_img,
             'name': name,
-            'introduction': abstract,
-            'follower_count': int(guanzhu),
-            'fans_count': int(fensi),
+            'introduction': introduction,
+            'follower_count': int(followers),
+            'fans_count': int(fans),
             'crawled_at':int(time.time()*1000)
             }
             print(uid+'_This user information is captured!')
             return toutiaors
     except:
-        with open(os.path.abspath('.') + '/errLogs' + '/fetchWriterTitle_log.txt', 'a', encoding='utf-8',
-                  errors='ignore') as f:
-            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ':\n')
-            traceback.print_exc(file=f)
-            f.write('------------------------------------------\n\n')
         traceback.print_exc()
 
 
@@ -105,7 +58,7 @@ def check_time(behot_time,pool,uid):
     if rcli.hexists('item_AGV_hash',uid):
         item=eval(rcli.hget('item_AGV_hash',uid).decode())
         crawled_at=item['crawled_at']
-        can_fech_time=crawled_at-(7*24*60*60)
+        can_fech_time=crawled_at-(3*24*60*60)
         #print(time.strftime("%Y-%m-%d",time.localtime(can_fech_time)))
         #can_fech_time=time.mktime(time.strptime('2017-10-28',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
@@ -114,7 +67,7 @@ def check_time(behot_time,pool,uid):
             return 0
     else:
         #can_fech_time=(time.time())-(1*24*60*60)
-        can_fech_time=time.mktime(time.strptime('2017-09-01',"%Y-%m-%d"))
+        can_fech_time=time.mktime(time.strptime('2017-01-01',"%Y-%m-%d"))
         #print(time.strftime("%Y-%m-%d",time.localtime(behot_time)))
         if behot_time>=can_fech_time:
             return 1
@@ -351,7 +304,6 @@ class fetchContentThread(threading.Thread):
 def wirterTitles_into_mongo(wirterTitles,db):
     try:
         conn=db.toutiaors
-        #time_fetch =time.time()
         uid=wirterTitles['_id']
         name=wirterTitles['name']
         if uid!=None and uid!='' and name!=None and name!='':
@@ -391,10 +343,6 @@ def listOfWorks_into_redis(listOfWorks,pool):
 def headlineIds(pool,db1,db2,userAgents):
     print('headlineIds')
     rcli = redis.StrictRedis(connection_pool=pool)
-    #agent_lens=len(userAgents)
-    #uids=['56221239740','58562576245','4212960515','52900612083','56156150735']
-    #uids=['58562576245']
-    #while True:
     while True:
         try:
             if db1.client.is_primary :
@@ -403,32 +351,18 @@ def headlineIds(pool,db1,db2,userAgents):
             elif db2.client.is_primary :
                 db = db2
                 db1.client.close()
-            #toutiaors_conn = db.toutiaors
             user_agent=random.choice(userAgents)
             uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list',0).decode()
             #uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list_bck',0).decode()
-            #uid=uids.pop()
             print('Geted the user id_'+uid)
             if uid != None:
-                '''
-                #check_be=toutiaors_conn.find_one({'_id': uid})
-                # if check_be and check_be['fans_count']>=50:
-                '''   
- 
+                toutiaor=fetchWriterTitle(uid,user_agent)
+                wirterTitles_into_mongo(toutiaor,db)
                 items_id=[]
                 dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id,db))
                 dy_thread.start()
                 dy_thread.join()
                 listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)
-                '''
-                if dy_list != None and dy_list['_id'] == uid and (dy_list['articles']!=[] or dy_list['galleries']!=[] or dy_list['videos']!=[] or dy_list['others']!=[]):
-                    dy_list_thread = threading.Thread(target=listOfWorks_into_redis, args=(dy_list, pool))
-                    dy_list_thread.start()
-                    perk_item_thread = threading.Thread(target=item_perk.perk_item,args=(dy_list, pool))
-                    perk_item_thread.start()
-                    dy_list_thread.join()
-                    perk_item_thread.join()
-                '''
             time.sleep(5)
         except:
             traceback.print_exc()
