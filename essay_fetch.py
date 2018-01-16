@@ -95,7 +95,6 @@ def rep_resouce(es,db,item,rcli,user_agent):
                         traceback.print_exc()
                         rcli.lpush('item_AGV_list',item)
                         item_article=None
-                    print(item_article)
                     if item_article!=None:
                     #if item_article!=None:
                         item_article=to_es_body(item_article,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
@@ -109,7 +108,6 @@ def rep_resouce(es,db,item,rcli,user_agent):
                         item['type']=0
                         rcli.lpush('item_AGV_list',item)
                         item_gallery=None
-                    print(item_gallery)
                     if item_gallery!=None and len(item_gallery['images']):
                         item_gallery = to_es_body(item_gallery,index_name='toutiao_articles_and_users',type_name='toutiao_articles_and_users')
                         rcli.lpush('item_ES_list', item_gallery)
