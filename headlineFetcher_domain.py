@@ -24,30 +24,26 @@ def moreWriterFetch(rpool,db1,db2,user_agents):
         thread_list.append(t)
     for th in thread_list:
         th.start()
-    # for th in thread_list:
-    #     th.join()
+    for th in thread_list:
+        th.join()
 
 def moreFetchEssay(rpool,es,db1,db2,user_agents):
     thread_list = []
-    for i in range(4):
+    for i in range(1):
         t = threading.Thread(target=essay_fetch.fetch_essay,args=(rpool,es,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
         th.start()
-    # for th in thread_list:
-    #     th.join()
+    for th in thread_list:
+        th.join()
 
 def workingThread(rpool,es,db1,db2,user_agents):
     t1=threading.Thread(target=moreWriterFetch,args=(rpool, db1,db2,user_agents))
     t2 = threading.Thread(target=moreFetchEssay, args=(rpool,es, db1,db2,user_agents))
     t1.start()
     t2.start()
-    thread_list = []
-    for i in range(8):
-        t=threading.Thread(target=dynamic_fetch.parse_dyList, args=(rpool,user_agents))
-        thread_list.append(t)
-    for th in thread_list:
-        th.start()
+    t1.join()
+    t2.join()
 
 def check_start(pool):
     rcli = redis.StrictRedis(connection_pool=pool)
@@ -113,7 +109,6 @@ def pro_pool_():
     mon_url='mongodb://' + mon_user + ':' + mon_pwd + '@' + mon_host + ':' + mon_port +'/'+ mon_dn+'?maxPoolSize=8'
     mon_url2 = 'mongodb://' + mon2_user + ':' + mon2_pwd + '@' + mon2_host + ':' + mon2_port + '/' + mon2_dn+'?maxPoolSize=8'
     rpool = redis.ConnectionPool(host=red_host, port=red_port,password=red_pwd)
-    #rpool = redis.ConnectionPool(host='127.0.0.1', port=6379)
     #rpool = redis.ConnectionPool(host='127.0.0.1', port=6379)
     es = Elasticsearch([es_url], http_auth=(es_name, es_pwd), port=es_port)
     #es = Elasticsearch([{'host': '127.0.0.1', 'port': 9200}])

@@ -58,7 +58,7 @@ def check_time(behot_time,pool,uid):
     if rcli.hexists('item_AGV_hash',uid):
         item=eval(rcli.hget('item_AGV_hash',uid).decode())
         crawled_at=item['crawled_at']
-        can_fech_time=crawled_at-(3*24*60*60)
+        can_fech_time=crawled_at-(7*24*60*60)
         #print(time.strftime("%Y-%m-%d",time.localtime(can_fech_time)))
         #can_fech_time=time.mktime(time.strptime('2017-10-28',"%Y-%m-%d"))
         if behot_time>=can_fech_time:
@@ -106,176 +106,6 @@ def str2duration(sTime):
         return 0
 
 
-def json_po(_str):
-    #print(_str)
-    sa=_str.replace(r'\"',"'").replace(r'\n','').replace(r'\t','')
-    #sa_f=list(x for x in sa if not re.match(r'^.*"open_page_url": "sslocal:',x) and not re.match(r'^.*"context":',x) and not re.match(r'^.*"script":',x) and not re.match(r'^"is.snssdk.com"',x) and not re.match(r'^.*"log_extra"',x) and not re.match(r'^.*"req_id"',x) and not re.match(r'^{*"impr_id"',x) and not re.match(r'^.*"ac=wifi',x) and not re.match(r'^.*ame=',x) and not re.match(r'"ignore_web_transform"',x))
-    #sa_e=', '.join(sa_f)
-    return json.loads(sa)
-
-def json_analyze(uid,datas,articles,galleries,videos,others,pool,user_agent):
-    print('into json_analyze!')
-    with open(os.path.abspath('.') + '/PhoneID' + '/phone_id.txt', 'r', encoding='utf-8') as f:
-        line=f.read()
-    id_dict = eval(line)
-    headers = { 'User-Agent' : user_agent }
-    iid='9198954949'
-    device_id='35699373946'
-    device_platform='android'
-    if 'iid' in id_dict.keys() and id_dict['iid']!='':
-        iid=id_dict['iid']
-    if 'device_id' in id_dict.keys() and id_dict['device_id']!='':
-        device_id=id_dict['device_id']
-    if 'device_platform' in id_dict.keys() and id_dict['device_platform']!='':
-        device_platform=id_dict['device_platform']
-
-    for data in datas:   
-        #print('json_analyze',data)    
-        behot_time=data['behot_time']
-        global is_again_working
-        is_again_working=check_time(behot_time,pool,uid)
-        # if not is_again_working:
-        #     continue
-        genre = data['article_genre']
-        if genre == 'article':
-            
-            article = {
-                'group_id': data['group_id'],
-                'item_id': data['item_id'],
-                'title':data['title'],
-                'go_detail_count': data['go_detail_count'],
-                'comments_count': data['comments_count'],
-                #'like_count':like_count if ,
-                'like_count':data['like_count'],
-                'behot_time': data['behot_time'],
-                'article_genre':genre
-            }
-            
-            articles.append(article)
-        elif (genre == 'video'):
-            url = 'https://is.snssdk.com/2/article/information/v20/?group_id=' + data['group_id'] + '&item_id=' + data['item_id'] + '&aggr_type=1&context=1&from_category=__all__&article_page=0&iid='+iid+'&device_id='+device_id+'&ac=wifi&app_name=news_article&version_code=605&version_name=6.0.5&device_platform='+device_platform
-            print('Start grabbing phone information')
-            try:
-                #res = requests.get(url, timeout=30)
-                req=urllib.request.Request(url,headers=headers)
-                res=urllib.request.urlopen(req)
-            except :
-                #res = requests.get(url, timeout=30)
-                req=urllib.request.Request(url,headers=headers)
-                res=urllib.request.urlopen(req)
-            if re.match(r'^http.*://is.snssdk.com/2/article/information/.*$', res.geturl()):
-                #_dict = json.loads(res.content.decode('utf-8'))
-                print(url==res.geturl())
-                text=res.read().decode('utf-8')
-                print('text_length:',len(text))
-                _dict=json_po(text)
-                print('The mobile phone information grabs the end')
-                video_dict = check_phone(_dict)
-                digg_count=0
-                bury_count=0
-                if 'digg_count' in video_dict.keys():
-                    digg_count=video_dict['digg_count']
-                elif 'like_count' in video_dict.keys():
-                    digg_count =video_dict['like_count']
-                if 'bury_count' in video_dict.keys():
-                    bury_count = video_dict['bury_count']
-                str_duration=data['video_duration_str']
-                second_duration=str2duration(str_duration)
-
-                video = {
-                    'group_id':data['group_id'],
-                    'item_id': data['item_id'],
-                    'title': data['title'],
-                    'img_url':(data['image_url'] if ('image_url' in data.keys()) else ''),
-                    'video_duration_str': second_duration,
-                    'detail_play_effective_count': data['detail_play_effective_count'],
-                    'comments_count': data['comments_count'],
-                    'digg_count': data['like_count'] if 'like_count' in data.keys() else video_dict['digg_count'] if 'digg_count' in video_dict.keys() else video_dict['like_count'] if 'like_count' in video_dict.keys() else 0,
-                    'bury_count': bury_count,
-                    'behot_time': data['behot_time'],
-                    'article_genre': genre
-                }
-                videos.append(video)
-        elif genre == 'other':
-            others.append(data)
-    time.sleep(1)
-    if not is_again_working:
-        return -1
-
-def fetchContent(uid,pool,user_agent):
-    heads={}
-    heads['User-Agent']=user_agent
-    articles = []
-    gallerys = []
-    videos = []
-    others=[]
-    resources_num={}
-    max_behot_time=0
-    while True:
-        url_json = 'http://www.toutiao.com/c/user/article/?page_type=1&user_id=' + uid + '&max_behot_time=' + str(
-            max_behot_time) + '&count=20'
-        try:
-            res_json = requests.get(url_json, headers=heads, timeout=30)
-        except requests.exceptions.Timeout:
-            res_json = requests.get(url_json, headers=heads, timeout=30)
-        print('fetchContent',res_json.status_code)
-        if res_json.status_code == 200:
-            try:
-                if max_behot_time == 0:
-                    try:
-                        cook = res_json.headers['Set-Cookie'][:106]
-                    except:
-                        cook =''
-                    heads['Cookie'] = cook
-                json_dict = json.loads(res_json.content.decode('utf-8'))
-                if 'data' not in json_dict:
-                    print('please test the Ip is blocked!')
-                    _count=0
-                    while True:
-                        _count+=1
-                        minutes=random.randint(1,10)
-                        time.sleep(minutes*60)
-                        res = requests.get(url_json, headers=heads, timeout=30)
-                        json_dict = json.loads(res.content.decode('utf-8'))
-                        if res.status_code==200 and 'data' in json_dict:
-                            break
-                        if _count>=3:
-                            break
-                datas = json_dict['data']
-                has_more = json_dict['has_more']
-                if not has_more and len(datas) == 0:
-                    break
-                elif has_more and len(datas) == 0:
-                    break
-                elif not has_more and len(datas) != 0:
-                    json_analyze(uid,datas, articles, gallerys, videos,others,pool,user_agent)
-                    break
-                elif has_more and len(datas) != 0:
-                    is_again_working=json_analyze(uid,datas, articles, gallerys, videos,others,pool,user_agent)
-                    if is_again_working==-1:
-                        break
-                    max_behot_time = json_dict['next']['max_behot_time']
-            except:
-                with open(os.path.abspath('.') + '/errLogs' + '/fetchContent_log.txt', 'a', encoding='utf-8',
-                          errors='ignore') as f:
-                    f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ':\n')
-                    traceback.print_exc(file=f)
-                    f.write('------------------------------------------\n\n')
-                    traceback.print_exc()
-                break
-            time.sleep(1)
-        else:
-            return
-    resources_num['_id'] = uid
-    resources_num['articles'] = articles
-    resources_num['galleries'] = gallerys
-    resources_num['videos'] = videos
-    resources_num['others'] = others
-    resources_num['crawled_at'] = time.time()
-    print(uid + '_This user content information is captured!')
-    print(uid,len(articles),len(gallerys),len(videos),len(others))
-    return resources_num
-
 
 class fetchWriterTitleThread(threading.Thread):
     def __init__(self,uid,user_agent):
@@ -304,6 +134,7 @@ class fetchContentThread(threading.Thread):
 def wirterTitles_into_mongo(wirterTitles,db):
     try:
         conn=db.toutiaors
+        #time_fetch =time.time()
         uid=wirterTitles['_id']
         name=wirterTitles['name']
         if uid!=None and uid!='' and name!=None and name!='':
@@ -317,6 +148,15 @@ def wirterTitles_into_mongo(wirterTitles,db):
             traceback.print_exc(file=f)
             f.write('------------------------------------------\n\n')
         '''
+        traceback.print_exc()
+
+
+def toutiaors_updated_daily(db,toutiaor):
+    try:
+        conn=db.toutiaors_daily
+        _id=toutiaor['_id']+'-'+time.strftime("%Y-%m-%d", time.localtime())
+        conn.update({'_id': _id},{'toutiaor_id':toutiaor['_id'],'follower_count':toutiaor['follower_count'],'fans_count':toutiaor['fans_count']}, True)
+    except:
         traceback.print_exc()
 
 
@@ -353,16 +193,20 @@ def headlineIds(pool,db1,db2,userAgents):
                 db1.client.close()
             user_agent=random.choice(userAgents)
             uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list',0).decode()
-            #uid = rcli.brpoplpush('toutiao_id_list','toutiao_id_list_bck',0).decode()
+            #uid='50371413220'
             print('Geted the user id_'+uid)
             if uid != None:
                 toutiaor=fetchWriterTitle(uid,user_agent)
+                if rcli.hexists('primary_ids_hash',uid):
+                    toutiaors_updated_daily(db,toutiaor)
                 wirterTitles_into_mongo(toutiaor,db)
-                items_id=[]
-                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,items_id,db))
+                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,db))
                 dy_thread.start()
                 dy_thread.join()
                 listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)
+            #break
             time.sleep(5)
         except:
             traceback.print_exc()
+            time.sleep(5)
+
