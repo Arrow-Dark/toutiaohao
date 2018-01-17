@@ -112,6 +112,6 @@ def fetch_dy_list(uid,pool,user_agent,db):
                 has_more =False
                 
             json_num+=1
-            time.sleep(7)
+            time.sleep(10)
     except:       
         traceback.print_exc()

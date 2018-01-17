@@ -209,6 +209,7 @@ def fetchArticles(es,db,article,html):
     return article
 
 def fetchOthers(es,db,other,html):
+    item_id=other['id']
     other_content=[]
     other_imgs = []
     labels=[]
@@ -224,7 +225,7 @@ def fetchOthers(es,db,other,html):
     other['content'] = other_content
     other['images'] = other_imgs
     other['labels'] = labels
-    info_gal['crawled_at'] = int(time.time()*1000)
+    other['crawled_at'] = int(time.time()*1000)
     print(item_id, 'The other atlas has been parsed')
     return info_gal
 
