@@ -185,6 +185,13 @@ def headlineIds(pool,db1,db2,userAgents):
     rcli = redis.StrictRedis(connection_pool=pool)
     while True:
         try:
+            if rcli.info('memory')['used_memory'] > (700*1024*1024):
+                while 1:
+                    if rcli.info('memory')['used_memory'] < (200*1024*1024):
+                        break
+                    else:
+                        time.sleep(900)
+                        continue
             if db1.client.is_primary :
                 db=db1
                 db2.client.close()
