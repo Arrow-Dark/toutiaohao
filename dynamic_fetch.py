@@ -80,7 +80,7 @@ def fetch_dy_list(uid,pool,user_agent,db):
             content = json.loads(content)
             if 'data' in content.keys() and 'data' in content['data'].keys():
                 has_more = content['data']['has_more']
-                max_cursor = content['data']['max_cursor']
+                max_cursor = content['data']['max_cursor']+random.randint(100,1000)
                 original_data=content['data']['data']
                 if len(original_data) == 0:
                     rcli.sadd('err_err_set',uid)
@@ -112,6 +112,6 @@ def fetch_dy_list(uid,pool,user_agent,db):
                 has_more =False
                 
             json_num+=1
-            time.sleep(2)
+            time.sleep(1)
     except:       
         traceback.print_exc()
