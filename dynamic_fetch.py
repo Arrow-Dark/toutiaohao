@@ -61,6 +61,12 @@ def fetch_dy_list(uid,pool,user_agent,db):
     print(uid,'start fetch_dy_list!')
     heads={}
     heads['User-Agent']=user_agent
+    heads['Accept']='*/*'
+    heads['Accept-Encoding']='gzip, deflate, sdch'
+    heads['Accept-Language']='zh-CN,zh;q=0.8'
+    heads['Connection']='keep-alive'
+    heads['Host']='i.snssdk.com'
+    heads['Referer']='http://m.toutiao.com/profile/{}/'.format(uid)
     articles = []
     gallerys = []
     videos = []
@@ -80,7 +86,7 @@ def fetch_dy_list(uid,pool,user_agent,db):
             content = json.loads(content)
             if 'data' in content.keys() and 'data' in content['data'].keys():
                 has_more = content['data']['has_more']
-                max_cursor = content['data']['max_cursor']+random.randint(100,1000)
+                max_cursor = content['data']['max_cursor']
                 original_data=content['data']['data']
                 if len(original_data) == 0:
                     rcli.sadd('err_err_set',uid)
