@@ -19,7 +19,7 @@ import dynamic_fetch
 
 def moreWriterFetch(rpool,db1,db2,user_agents):
     thread_list=[]
-    for i in range(4):
+    for i in range(3):
         t=threading.Thread(target=writer_fetch.headlineIds,args=(rpool,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
