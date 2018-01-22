@@ -131,6 +131,21 @@ class fetchContentThread(threading.Thread):
         return self.result
 
 
+class fetch_dy_thread(threading.Thread):
+    def __init__(self,uid,pool,user_agent,items_id,db):
+        threading.Thread.__init__(self)
+        self.uid=uid
+        self.pool = pool
+        self.user_agent=user_agent
+        self.items_id=items_id
+        self.db=db
+        self.result=None
+    def run(self):
+        self.result=dynamic_fetch.fetch_dy_list(self.uid,self.pool,self.user_agent,self.items_id,self.db)
+    def get_result(self):
+        return self.result
+
+
 def wirterTitles_into_mongo(wirterTitles,db):
     try:
         conn=db.toutiaors
@@ -207,10 +222,12 @@ def headlineIds(pool,db1,db2,userAgents):
                 if rcli.hexists('primary_ids_hash',uid):
                     toutiaors_updated_daily(db,toutiaor)
                 wirterTitles_into_mongo(toutiaor,db)
-                dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,db))
+                #dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,db))
+                dy_thread=fetch_dy_thread(uid,pool,user_agent,items_id,db)
                 dy_thread.start()
                 dy_thread.join()
-                listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)
+                if dy_thread.get_result():
+                    listOfWorks_into_redis({'_id':uid,'crawled_at':time.mktime(datetime.date.today().timetuple())},pool)
             #break
             time.sleep(5)
         except:

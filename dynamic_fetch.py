@@ -77,47 +77,63 @@ def fetch_dy_list(uid,pool,user_agent,db):
         json_num=1
         max_cursor=0
         has_more=True
+        warning=0
         con=0
+        sours=[]
         while has_more:
-            #url='http://i.snssdk.com/dongtai/list/v9/?user_id={uid}&max_cursor={cursor}&callback=jsonp{num}'.format(uid=uid,cursor=max_cursor,num=json_num)
-            url='http://i.snssdk.com/dongtai/list/v9/?user_id={uid}&max_cursor={cursor}'.format(uid=uid,cursor=max_cursor)
+            url='http://i.snssdk.com/dongtai/list/v9/?user_id={uid}&max_cursor={cursor}&callback=jsonp{num}'.format(uid=uid,cursor=max_cursor,num=json_num)
             res=requests.get(url,headers=heads,timeout=30)
             content = res.content.decode('utf-8')
+            content = parse_jsonp(content)
             content = json.loads(content)
             if 'data' in content.keys() and 'data' in content['data'].keys():
                 has_more = content['data']['has_more']
-                max_cursor = content['data']['max_cursor']
+                max_cursor = content['data']['max_cursor']#+random.randint(100,1000)
+                print(max_cursor)
                 original_data=content['data']['data']
                 if len(original_data) == 0:
                     rcli.sadd('err_err_set',uid)
                 if len(original_data) != 0:
+                    newps=[]
                     for x in original_data:
                         if re.match(r'^http.//toutiao.com/i.*$',x['share_url']) or re.match(r'^http.//weitoutiao.zjurl.cn/.*$',x['share_url']):
-                        #if not re.match(r'^http.*//toutiao.com/dongtai.*$',x['share_url']):
                             try:
                                 item_id = x['item_id_str'] if 'item_id_str' in x else x['id_str']
                             except KeyError:
                                 continue
                             behot_time=x['create_time']
                             print('create_time:',time.strftime("%Y-%m-%d",time.localtime(behot_time)))
-                            #is_exist=False if item_id in items_id else True
+                            print(item_id)
                             is_again_working =writer_fetch.check_time(behot_time,pool,uid)
-                            #print('is_again_working',is_again_working)
                             if is_again_working:
                                 put2es({'uid':uid,'original_data':x},pool,db)
+                                newps.append(item_id)
                                 con+=1
                             else:
                                 has_more=False
                                 break
                     print(uid,con,'page:',json_num)
-                
+                    if len(newps):
+                        doit=True
+                        for n in newps:
+                            if not n in sours:
+                                doit=False
+                                break
+                        if doit:
+                            sours=newps
+                            warning+=1
+                        else:
+                            sours=newps
                 if not has_more:
-                    print(uid + '_Dynamic overtime has stopped fetching')
                     return
             else:
                 has_more =False
-                
+            if warning>5:
+                rcli.hset('war_ids',uid,"warn")
+                print('this uid is stucking,into next uid!')
+                return
             json_num+=1
-            time.sleep(1)
+            time.sleep(2)
+        return 1
     except:       
         traceback.print_exc()
