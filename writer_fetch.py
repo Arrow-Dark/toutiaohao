@@ -132,16 +132,15 @@ class fetchContentThread(threading.Thread):
 
 
 class fetch_dy_thread(threading.Thread):
-    def __init__(self,uid,pool,user_agent,items_id,db):
+    def __init__(self,uid,pool,user_agent,db):
         threading.Thread.__init__(self)
         self.uid=uid
         self.pool = pool
         self.user_agent=user_agent
-        self.items_id=items_id
         self.db=db
         self.result=None
     def run(self):
-        self.result=dynamic_fetch.fetch_dy_list(self.uid,self.pool,self.user_agent,self.items_id,self.db)
+        self.result=dynamic_fetch.fetch_dy_list(self.uid,self.pool,self.user_agent,self.db)
     def get_result(self):
         return self.result
 
@@ -223,7 +222,7 @@ def headlineIds(pool,db1,db2,userAgents):
                     toutiaors_updated_daily(db,toutiaor)
                 wirterTitles_into_mongo(toutiaor,db)
                 #dy_thread=threading.Thread(target=dynamic_fetch.fetch_dy_list,args=(uid,pool,user_agent,db))
-                dy_thread=fetch_dy_thread(uid,pool,user_agent,items_id,db)
+                dy_thread=fetch_dy_thread(uid,pool,user_agent,db)
                 dy_thread.start()
                 dy_thread.join()
                 if dy_thread.get_result():

@@ -155,7 +155,7 @@ def fetchGallerys(es,db,gallery,html):
             #print(uid,item_id,info_spl)
             gallery_info = json.loads(str(info_json))
             #print(gallery_info['labels'])
-            labels = gallery_info['labels']
+            labels = gallery_info['labels'] if 'labels' in gallery_info.keys() else []
             gallery['labels'] = labels
             images = (x['url'] for x in gallery_info['sub_images'])
             gallery['images']=list(images)
