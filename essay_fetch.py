@@ -157,7 +157,7 @@ def fetchGallerys(es,db,gallery,html):
             #print(gallery_info['labels'])
             labels = gallery_info['labels'] if 'labels' in gallery_info.keys() else []
             gallery['labels'] = labels
-            images = (x['url'] for x in gallery_info['sub_images'] if 'sub_images' in gallery_info.keys())
+            images = (x['url'] for x in gallery_info['sub_images']) if 'sub_images' in gallery_info.keys() else []
             gallery['images']=list(images)
             gallery['content'] = '\n'.join(gallery_info['sub_abstracts'])
             gallery['crawled_at'] = int(time.time()*1000)
