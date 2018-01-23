@@ -259,7 +259,7 @@ def item_to_es(pool):
                 print(str(len(articles_to_es)) + 'articles pushed into Elasticsearch')
                 del articles_to_es[0:len(articles_to_es)]
             traceback.print_exc()
-        time.sleep(10)
+        time.sleep(2)
 
 def toutiaor_join_article(item,db):
     try:
