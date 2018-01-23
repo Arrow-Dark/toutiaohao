@@ -159,7 +159,7 @@ def fetchGallerys(es,db,gallery,html):
             gallery['labels'] = labels
             images = (x['url'] for x in gallery_info['sub_images']) if 'sub_images' in gallery_info.keys() else []
             gallery['images']=list(images)
-            gallery['content'] = '\n'.join(gallery_info['sub_abstracts'])
+            gallery['content'] = '\n'.join(gallery_info['sub_abstracts']) if 'sub_abstracts' in gallery_info.keys() else ''
             gallery['crawled_at'] = int(time.time()*1000)
             print(gallery['id'],'This gallery has been resolved!')
         else:
