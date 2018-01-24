@@ -125,13 +125,13 @@ def fetch_dy_list(uid,pool,user_agent,db):
                         else:
                             sours=newps
                 if not has_more:
-                    return
+                    return 1
             else:
                 has_more =False
             if warning>5:
                 rcli.hset('war_ids',uid,"warn")
                 print('this uid is stucking,into next uid!')
-                return
+                return 0
             json_num+=1
             time.sleep(2)
         return 1
