@@ -29,7 +29,7 @@ def moreWriterFetch(rpool,db1,db2,user_agents):
 
 def moreFetchEssay(rpool,es,db1,db2,user_agents):
     thread_list = []
-    for i in range(2):
+    for i in range(3):
         t = threading.Thread(target=essay_fetch.fetch_essay,args=(rpool,es,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
