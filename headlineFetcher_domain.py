@@ -15,6 +15,7 @@ from elasticsearch import Elasticsearch
 import socket
 import random
 import dynamic_fetch
+from toutiaors import timeing_job
 
 
 def moreWriterFetch(rpool,db1,db2,user_agents):
@@ -37,46 +38,50 @@ def moreFetchEssay(rpool,es,db1,db2,user_agents):
     for th in thread_list:
         th.join()
 
+
+
 def workingThread(rpool,es,db1,db2,user_agents):
     t1=threading.Thread(target=moreWriterFetch,args=(rpool, db1,db2,user_agents))
     t2 = threading.Thread(target=moreFetchEssay, args=(rpool,es, db1,db2,user_agents))
+    t3 = threading.Thread(target=timeing_job, args=(rpool,db1,db2,user_agents))
     t1.start()
     t2.start()
+    t3.start()
     t1.join()
     t2.join()
 
-def check_start(pool):
-    rcli = redis.StrictRedis(connection_pool=pool)
-    while True:
-        try:
-            rcli.brpoplpush('_ping','_pang',0)
-            hostName = socket.gethostname()
-            print(hostName+':Get the uid fetch privilege, ready to grab the uid!')
-            searchKeyWord.cur_tab_url_open(pool)
-            rcli.rpoplpush('_pang', '_ping')
-            print(hostName + ':End fetching uid, return uid fetch permissions!')
-            time.sleep(3)
-        except redis.exceptions.ConnectionError:
-            print(hostName + ':Disconnect from redis, suggest repair links and restart crawlers!')
-            traceback.print_exc()
-        except:
-            rcli.rpoplpush('_pang','_ping')
-            print(hostName + ':Grab uid exception and return uid fetch privileges!')
-            traceback.print_exc()
+# def check_start(pool):
+#     rcli = redis.StrictRedis(connection_pool=pool)
+#     while True:
+#         try:
+#             rcli.brpoplpush('_ping','_pang',0)
+#             hostName = socket.gethostname()
+#             print(hostName+':Get the uid fetch privilege, ready to grab the uid!')
+#             searchKeyWord.cur_tab_url_open(pool)
+#             rcli.rpoplpush('_pang', '_ping')
+#             print(hostName + ':End fetching uid, return uid fetch permissions!')
+#             time.sleep(3)
+#         except redis.exceptions.ConnectionError:
+#             print(hostName + ':Disconnect from redis, suggest repair links and restart crawlers!')
+#             traceback.print_exc()
+#         except:
+#             rcli.rpoplpush('_pang','_ping')
+#             print(hostName + ':Grab uid exception and return uid fetch privileges!')
+#             traceback.print_exc()
 
 
-def check_ball(pool):
-    rcli = redis.StrictRedis(connection_pool=pool)
-    count=0
-    while True:
-        if rcli.llen('_pang'):
-            count+=1
-            if count>=20:
-                rcli.rpoplpush('_pang', '_ping')
-        else:
-            count=0
-        guess=random.randint(1,11)
-        time.sleep(guess)
+# def check_ball(pool):
+#     rcli = redis.StrictRedis(connection_pool=pool)
+#     count=0
+#     while True:
+#         if rcli.llen('_pang'):
+#             count+=1
+#             if count>=20:
+#                 rcli.rpoplpush('_pang', '_ping')
+#         else:
+#             count=0
+#         guess=random.randint(1,11)
+#         time.sleep(guess)
 
 
 def pro_pool_():
