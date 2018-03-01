@@ -15,19 +15,19 @@ import redis
 import re
 
 
-# def start():
-#     global INPUT_TIME
-#     INPUT_TIME=None
-#     global TODAY
-#     TODAY=None
+def start():
+    global INPUT_TIME
+    INPUT_TIME=None
+    global TODAY
+    TODAY=None
 
-#     parser = optparse.OptionParser('usage %prog -g <H|C> -e <EPOCH> -t <TIME>')
-#     parser.add_option('-T', dest='input_time', type='string', help='Input Time. eg: 2017-11-12')
-#     (options, args) = parser.parse_args()
+    parser = optparse.OptionParser('usage %prog -g <H|C> -e <EPOCH> -t <TIME>')
+    parser.add_option('-T', dest='input_time', type='string', help='Input Time. eg: 2017-11-12')
+    (options, args) = parser.parse_args()
 
-#     if options.input_time != None:
-#         TODAY=options.input_time
-#         INPUT_TIME = datetime.datetime.strptime(options.input_time, "%Y-%m-%d")
+    if options.input_time != None:
+        TODAY=options.input_time
+        INPUT_TIME = datetime.datetime.strptime(options.input_time, "%Y-%m-%d")
 
 def fetchWriterTitle(uid,user_agent):
     try:
@@ -111,6 +111,7 @@ def worker(rpool,db1,db2,user_agents):
 
 def timeing_job(rpool,db1,db2,user_agents):
     while 1:
+        start()
         time.sleep(random.randint(0,3600))
         worker(rpool,db1,db2,user_agents)
         time.sleep(12*3600)
