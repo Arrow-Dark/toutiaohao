@@ -20,7 +20,7 @@ from toutiaors import timeing_job
 
 def moreWriterFetch(rpool,db1,db2,user_agents):
     thread_list=[]
-    for i in range(3):
+    for i in range(1):
         t=threading.Thread(target=writer_fetch.headlineIds,args=(rpool,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
@@ -30,7 +30,7 @@ def moreWriterFetch(rpool,db1,db2,user_agents):
 
 def moreFetchEssay(rpool,es,db1,db2,user_agents):
     thread_list = []
-    for i in range(3):
+    for i in range(2):
         t = threading.Thread(target=essay_fetch.fetch_essay,args=(rpool,es,db1,db2,user_agents,))
         thread_list.append(t)
     for th in thread_list:
